@@ -42,18 +42,24 @@ function Generator() {
     if (hasSymbols) {
       chars += symbols;
     }
-    const num_chars = chars.length;
 
-    const pass_ints = new Uint32Array(passLength);
-    const pass_buff = window.crypto.getRandomValues(pass_ints);
-    console.log("numchars", num_chars, pass_buff)
-    let pass: string = "";
-    pass_buff.forEach((i) => {
-      pass += chars[i % num_chars];
-      console.log(i % num_chars)
-    });
-    console.log(pass);
-    setPass(pass);
+    if (chars == "") {
+      setPass("");
+    }
+    else {
+      const num_chars = chars.length;
+
+      const pass_ints = new Uint32Array(passLength);
+      const pass_buff = window.crypto.getRandomValues(pass_ints);
+      console.log("numchars", num_chars, pass_buff)
+      let pass: string = "";
+      pass_buff.forEach((i) => {
+        pass += chars[i % num_chars];
+        console.log(i % num_chars)
+      });
+      console.log(pass);
+      setPass(pass);
+    }
   }
 
   function handleHasLetters() {
