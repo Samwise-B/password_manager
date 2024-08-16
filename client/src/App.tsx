@@ -6,6 +6,12 @@ type passBoxProps = {
   onRefreshClick: () => void;
 }
 
+type checkboxProps = {
+  flagType: string;
+  hasFlag: boolean;
+  handleFlag: () => void;
+}
+
 function PasswordBox({onRefreshClick, password} : passBoxProps) {
   
   return (
@@ -16,11 +22,23 @@ function PasswordBox({onRefreshClick, password} : passBoxProps) {
   )
 }
 
+function Checkbox({flagType, hasFlag, handleFlag}: checkboxProps) {
+
+  return (
+    <div className="form-check">
+      <input className="form-check-input" type="checkbox" value="" id="hasLetters" onClick={handleFlag} checked={hasFlag}></input>
+      <label className="form-check-label" htmlFor="hasLetters">
+        {flagType}
+      </label>
+    </div>
+  )
+}
+
 function Generator() {
   const [hasLetters, setHasLetters] = useState<boolean>(true);
   const [hasDigits, setHasDigits] = useState<boolean>(true);
   const [hasSymbols, setHasSymbols] = useState<boolean>(true);
-  const [passLength, setPassLength] = useState<number>(4);
+  const [passLength, setPassLength] = useState<number>(10);
 
   const [password, setPass] = useState<string>("");
 
@@ -93,24 +111,9 @@ function Generator() {
             </div>
           </div>
           <div className='mb-3'>
-            <div className="form-check">
-              <input className="form-check-input" type="checkbox" value="" id="hasLetters" onClick={handleHasLetters} checked={hasLetters}></input>
-              <label className="form-check-label" htmlFor="hasLetters">
-                Letters
-              </label>
-            </div>
-            <div className="form-check">
-              <input className="form-check-input" type="checkbox" value="" id="hasDigits" onClick={handleHasDigits} checked={hasDigits}></input>
-              <label className="form-check-label" htmlFor="hasDigits">
-                Digits
-              </label>
-            </div>
-            <div className="form-check">
-              <input className="form-check-input" type="checkbox" value="" id="hasSymbols" onClick={handleHasSymbols} checked={hasSymbols}></input>
-              <label className="form-check-label" htmlFor="hasSymbols">
-                Symbols
-              </label>
-            </div>
+            <Checkbox flagType={"Letters"} hasFlag={hasLetters} handleFlag={handleHasLetters}/>
+            <Checkbox flagType={"Digits"} hasFlag={hasDigits} handleFlag={handleHasDigits}/>
+            <Checkbox flagType={"Symbols"} hasFlag={hasSymbols} handleFlag={handleHasSymbols}/>
           </div>
         </div>
   )
