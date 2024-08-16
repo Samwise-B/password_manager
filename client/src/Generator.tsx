@@ -117,14 +117,14 @@ export default function Generator() {
   }
 
   return (
-    <div className='Generator'>
-          <PasswordBox onRefreshClick={generatePassword} password={password}/>
-          <PassLength passLength={passLength} handleLength={handleLength}/>
-          <div className='mb-3'>
+    <div className='Generator container-sm'>
+        <PasswordBox onRefreshClick={generatePassword} password={password}/>
+        <PassLength passLength={passLength} handleLength={handleLength}/>
+        <div className='mb-3'>
             <Checkbox flagType={"Letters"} hasFlag={hasLetters} handleFlag={handleHasLetters}/>
             <Checkbox flagType={"Digits"} hasFlag={hasDigits} handleFlag={handleHasDigits}/>
             <Checkbox flagType={"Symbols"} hasFlag={hasSymbols} handleFlag={handleHasSymbols}/>
-          </div>
         </div>
+    </div>
   )
 }
