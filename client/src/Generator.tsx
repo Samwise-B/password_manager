@@ -1,27 +1,33 @@
 import { useEffect, useState } from 'react';
 
-type passBoxProps = {
-  password: string;
-  onRefreshClick: () => void;
+interface generatorProps {
+  readonlyPassword: boolean;
 }
 
-type checkboxProps = {
+interface passBoxProps  {
+  password: string;
+  isReadOnly: boolean;
+  onRefreshClick: () => void;
+  onChangePassword: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+interface checkboxProps {
   flagType: string;
   hasFlag: boolean;
   handleFlag: () => void;
 }
 
-type passLengthProps = {
+interface passLengthProps {
   passLength: number;
   handleLength: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-function PasswordBox({onRefreshClick, password} : passBoxProps) {
-  
+function PasswordBox({password, isReadOnly, onRefreshClick, onChangePassword} : passBoxProps) {
+
   return (
     <div className='PasswordText input-group mb-3'>
-      <input className="form-control" type="text" value={password} id="generatedPassword" disabled readOnly></input>
-      <span className="input-group-text" id="passwordRefresh" onClick={onRefreshClick}>@</span>         
+      <input className="form-control" type="text" name="password" value={password} onChange={onChangePassword} id="generatedPassword" readOnly={isReadOnly}></input>
+      <button type='button' className="btn btn-outline-secondary" id="passwordRefresh" onClick={onRefreshClick}>Refresh</button>         
     </div>
   )
 }
@@ -46,18 +52,18 @@ function Checkbox({flagType, hasFlag, handleFlag}: checkboxProps) {
 
   return (
     <div className="form-check">
-      <input className="form-check-input" type="checkbox" value="" id="hasLetters" onClick={handleFlag} checked={hasFlag}></input>
-      <label className="form-check-label" htmlFor="hasLetters">
+      <input className="form-check-input" type="checkbox" value="" id={flagType} onChange={handleFlag} checked={hasFlag}></input>
+      <label className="form-check-label" htmlFor={flagType}>
         {flagType}
       </label>
     </div>
   )
 }
 
-export default function Generator() {
+export default function Generator({readonlyPassword} : generatorProps) {
   const [hasLetters, setHasLetters] = useState<boolean>(true);
   const [hasDigits, setHasDigits] = useState<boolean>(true);
-  const [hasSymbols, setHasSymbols] = useState<boolean>(true);
+  const [hasSymbols, setHasSymbols] = useState<boolean>(false);
   const [passLength, setPassLength] = useState<number>(10);
 
   const [password, setPass] = useState<string>("");
@@ -86,18 +92,18 @@ export default function Generator() {
     }
     else {
       const num_chars = chars.length;
-
       const pass_ints = new Uint32Array(passLength);
       const pass_buff = window.crypto.getRandomValues(pass_ints);
-      console.log("numchars", num_chars, pass_buff)
       let pass: string = "";
       pass_buff.forEach((i) => {
         pass += chars[i % num_chars];
-        console.log(i % num_chars)
       });
-      console.log(pass);
       setPass(pass);
     }
+  }
+
+  function onChangePassword(e: React.ChangeEvent<HTMLInputElement>) {
+    setPass(e.target.value);
   }
 
   function handleHasLetters() {
@@ -118,13 +124,13 @@ export default function Generator() {
 
   return (
     <div className='Generator container-sm'>
-        <PasswordBox onRefreshClick={generatePassword} password={password}/>
-        <PassLength passLength={passLength} handleLength={handleLength}/>
-        <div className='mb-3'>
-            <Checkbox flagType={"Letters"} hasFlag={hasLetters} handleFlag={handleHasLetters}/>
-            <Checkbox flagType={"Digits"} hasFlag={hasDigits} handleFlag={handleHasDigits}/>
-            <Checkbox flagType={"Symbols"} hasFlag={hasSymbols} handleFlag={handleHasSymbols}/>
-        </div>
+          <PasswordBox onRefreshClick={generatePassword} password={password} onChangePassword={onChangePassword} isReadOnly={readonlyPassword}/>
+          <PassLength passLength={passLength} handleLength={handleLength}/>
+          <div className='mb-3'>
+              <Checkbox flagType={"Letters"} hasFlag={hasLetters} handleFlag={handleHasLetters}/>
+              <Checkbox flagType={"Digits"} hasFlag={hasDigits} handleFlag={handleHasDigits}/>
+              <Checkbox flagType={"Symbols"} hasFlag={hasSymbols} handleFlag={handleHasSymbols}/>
+          </div>
     </div>
   )
 }

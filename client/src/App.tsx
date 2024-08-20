@@ -1,20 +1,27 @@
+import { useEffect, useState } from 'react';
 import './App.css'
 import Generator from './Generator'
 
-function Navigation() {
+type navigationProps = {
+  onGeneratorClick: () => void,
+  onBankClick: () => void,
+  onNewPasswordClick: () => void
+}
+
+function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigationProps) {
   return (
     <header className="px-3 py-1 mb-1 bg-dark text-white">
       <div className='container-fluid'>
         <div className='d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start'>
           <ul className="nav nav-underline d-flex align-items-center me-lg-auto">
             <li className="nav-item">
-              <a className="nav-link active" aria-current="page" href="#">Bank</a>
+              <button type="button" className="nav-link active" aria-current="page" onClick={onBankClick}>Bank</button>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#">Generator</a>
+              <button type="button" className="nav-link" onClick={onGeneratorClick}>Generator</button>
             </li>
           </ul>
-          <button type="button" className="btn btn-outline-primary mx-2 align-items-center">New</button>
+          <button type="button" className="btn btn-outline-primary mx-2 align-items-center" onClick={onNewPasswordClick}>New</button>
         </div>
       </div>
       <div className='input-group mb-3'>
@@ -55,8 +62,8 @@ function PassBank() {
   return (
     <div className='container-fluid'>
       <div className='list-group'>
-        <PassBankItem site_favicon='public/vite.svg' siteURL='www.placeholder.com' email='placeholder@email.com' username=''/>
-        <PassBankItem site_favicon='public/vite.svg' siteURL='www.placeholder.com' email='placeholder@email.com' username=''/>
+        <PassBankItem site_favicon='/vite.svg' siteURL='www.placeholder.com' email='placeholder@email.com' username=''/>
+        <PassBankItem site_favicon='/vite.svg' siteURL='www.placeholder.com' email='placeholder@email.com' username=''/>
       </div>
     </div>
   )
@@ -64,36 +71,80 @@ function PassBank() {
 
 function PassDetails() {
   return (
-    <div className="offcanvas offcanvas-end" tabIndex={-1} id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+    <div className="offcanvas offcanvas-end text-bg-dark w-100" tabIndex={-1} id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
       <div className="offcanvas-header">
-        <h5 className="offcanvas-title" id="offcanvasExampleLabel">Offcanvas</h5>
+        <button type="button" className="btn btn-outline-secondary">Edit</button>
         <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
       <div className="offcanvas-body">
-        <div>
-          Some text as placeholder. In real life you can have the elements you have chosen. Like, text, images, lists, etc.
+        <div className="container mb-3">
+          <label htmlFor="emailInput" className="form-label">Email address</label>
+          <input type="email" className="form-control" id="emailInput" placeholder="name@example.com"></input>
         </div>
-        <div className="dropdown mt-3">
-          <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
-            Dropdown button
-          </button>
-          <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <li><a className="dropdown-item" href="#">Action</a></li>
-            <li><a className="dropdown-item" href="#">Another action</a></li>
-            <li><a className="dropdown-item" href="#">Something else here</a></li>
-          </ul>
+        <div className="container mb-3">
+          <label htmlFor="inputPassword5" className="form-label">Password</label>
+          <input type="password" id="inputPassword5" className="form-control" aria-describedby="passwordHelpBlock"></input>
+        </div>
+        <div className="container mb-3">
+          <label htmlFor="urlInput" className="form-label">Website</label>
+          <input type="url" className="form-control" id="urlInput" placeholder="www.placeholder.com"></input>
         </div>
       </div>
     </div>
   )
 }
 
+function PasswordCreator() {
+  function addNewPassword(event: React.FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    console.log("test");
+    const target = event.target as typeof event.target & {
+      email: {value: string};
+      password: {value: string};
+      url: {value: string};
+    }
+    const email = target.email.value;
+    const password = target.password.value;
+    const url = target.url.value;
+    console.log(email, password, url)
+  }
+
+  return (
+    <form onSubmit={addNewPassword}>
+      <div className="container mb-3">
+        <label htmlFor="emailInput" className="form-label">Email address</label>
+        <input type="email" className="form-control" id="emailInput" placeholder="name@example.com" name="email"></input>
+      </div>
+      <Generator readonlyPassword={false}/>
+      <div className="container mb-3">
+        <label htmlFor="urlInput" className="form-label">Website</label>
+        <input type="url" className="form-control" id="urlInput" placeholder="www.placeholder.com" name="url"></input>
+      </div>
+      <button type="submit" className="btn btn-primary">Submit</button>
+    </form>
+  )
+}
+
 function App() {
+  const [bodyContent, setBodyContent] = useState<React.ReactNode>(<PassBank/>);
+
+  function onGeneratorClick() {
+    setBodyContent(<Generator readonlyPassword={true}/>);
+  }
+
+  function onBankClick() {
+    setBodyContent(<PassBank/>);
+  }
+
+  function onNewPasswordClick() {
+    setBodyContent(<PasswordCreator/>);
+  }
+
   return (
     <>
       <div className='App'>
-        <Navigation/>
-        <PassBank/>
+        <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
+        {bodyContent}
         <PassDetails/>
       </div>
     </>
