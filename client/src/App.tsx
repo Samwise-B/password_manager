@@ -2,10 +2,34 @@ import { useEffect, useState } from 'react';
 import './App.css'
 import Generator from './Generator'
 
-type navigationProps = {
+
+interface navigationProps {
   onGeneratorClick: () => void,
   onBankClick: () => void,
   onNewPasswordClick: () => void
+}
+
+interface passwordCreatorProps {
+  updatePasswordList: ({site_favicon, username, email, password, url}: PasswordListItem) => void;
+}
+
+interface passBankProps {
+  passwordList: Array<PasswordListItem>;
+}
+
+type PasswordListItem = {
+  site_favicon: string;
+  username: string;
+  email: string;
+  password: string;
+  url: string;
+}
+
+type PassBankItemProps = {
+  site_favicon: string;
+  siteURL: string;
+  email: string;
+  username: string;
 }
 
 function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigationProps) {
@@ -31,13 +55,6 @@ function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigat
   )
 }
 
-type PassBankItemProps = {
-  site_favicon: string;
-  siteURL: string;
-  email: string;
-  username: string;
-}
-
 function PassBankItem({site_favicon, siteURL, email, username}: PassBankItemProps) {
   return (
     <button type="button" className="list-group-item list-group-item-action rounded-0" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-current="true">
@@ -58,12 +75,15 @@ function PassBankItem({site_favicon, siteURL, email, username}: PassBankItemProp
 )
 }
 
-function PassBank() {
+function PassBank({passwordList}: passBankProps) {
+  const passBankItems: React.ReactNode = passwordList.map(passItem => 
+    <PassBankItem site_favicon='/vite.svg' email={passItem.email} username={passItem.username} siteURL={passItem.url}/>
+  );
+
   return (
     <div className='container-fluid'>
       <div className='list-group'>
-        <PassBankItem site_favicon='/vite.svg' siteURL='www.placeholder.com' email='placeholder@email.com' username=''/>
-        <PassBankItem site_favicon='/vite.svg' siteURL='www.placeholder.com' email='placeholder@email.com' username=''/>
+        {passBankItems}
       </div>
     </div>
   )
@@ -94,7 +114,7 @@ function PassDetails() {
   )
 }
 
-function PasswordCreator() {
+function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
   function addNewPassword(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     console.log("test");
@@ -103,10 +123,13 @@ function PasswordCreator() {
       password: {value: string};
       url: {value: string};
     }
+    const site_favicon = "/vite.svg"
+    const username = "placeholder"
     const email = target.email.value;
     const password = target.password.value;
     const url = target.url.value;
     console.log(email, password, url)
+    updatePasswordList({site_favicon, username, email, password, url});
   }
 
   return (
@@ -126,18 +149,37 @@ function PasswordCreator() {
 }
 
 function App() {
-  const [bodyContent, setBodyContent] = useState<React.ReactNode>(<PassBank/>);
+  const [passwordList, setPasswordList] = useState<Array<PasswordListItem>>([
+    {
+      site_favicon: "/vite.svg",
+      username: "placeholder",
+      email: "placeholder@gmail.com",
+      password: "test123",
+      url: "https://www.google.com"
+    }
+  ]);
+  const [bodyContent, setBodyContent] = useState<React.ReactNode>(<PassBank passwordList={passwordList}/>);
 
+  function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
+    setPasswordList(passwordList.concat({
+      site_favicon: site_favicon,
+      username: username,
+      email: email,
+      password: password,
+      url: url
+    }))
+  }
+  
   function onGeneratorClick() {
     setBodyContent(<Generator readonlyPassword={true}/>);
   }
 
   function onBankClick() {
-    setBodyContent(<PassBank/>);
+    setBodyContent(<PassBank passwordList={passwordList}/>);
   }
 
   function onNewPasswordClick() {
-    setBodyContent(<PasswordCreator/>);
+    setBodyContent(<PasswordCreator updatePasswordList={updatePasswordList}/>);
   }
 
   return (
