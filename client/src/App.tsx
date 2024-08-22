@@ -15,14 +15,23 @@ interface passwordCreatorProps {
 
 interface passBankProps {
   passwordList: Array<PasswordListItem>;
+  setCurrentPassIndex: (itemIndex: number) => void;
 }
 
 interface passDetailProps {
   passItem: PasswordListItem;
 }
 
-type PasswordListItem = {
+interface passBankItemProps {
   index: number;
+  site_favicon: string;
+  username: string;
+  email: string;
+  url: string;
+  setCurrentPassIndex: (itemIndex: number) => void;
+}
+
+type PasswordListItem = {
   site_favicon: string;
   username: string;
   email: string;
@@ -53,9 +62,15 @@ function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigat
   )
 }
 
-function PassBankItem({index, site_favicon, url, email, username, password}: PasswordListItem) {
+function PassBankItem({index, site_favicon, url, email, username, setCurrentPassIndex}: passBankItemProps) {
+  const [itemIndex, setItemIndex] = useState<number>(index);
+
+  function handleClick() {
+    setCurrentPassIndex(itemIndex);
+  }
+
   return (
-    <button type="button" className="list-group-item list-group-item-action rounded-0" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-current="true">
+    <button type="button" className="list-group-item list-group-item-action rounded-0" onClick={handleClick} data-bs-toggle="offcanvas" data-bs-target="#passDetailsWindow" aria-current="true">
       <div className="row">
         <div className="col-sm-1 fw-bold">
           <img src={site_favicon} alt="" className="rounded"></img>
@@ -73,9 +88,9 @@ function PassBankItem({index, site_favicon, url, email, username, password}: Pas
 )
 }
 
-function PassBank({passwordList}: passBankProps) {
-  const passBankItems: React.ReactNode = passwordList.map(passItem => 
-    <PassBankItem index={passItem.index} site_favicon='/vite.svg' email={passItem.email} username={passItem.username} url={passItem.url}/>
+function PassBank({passwordList, setCurrentPassIndex}: passBankProps) {
+  const passBankItems: React.ReactNode = passwordList.map((passItem, index) => 
+    <PassBankItem index={index} site_favicon='/vite.svg' email={passItem.email} username={passItem.username} url={passItem.url} setCurrentPassIndex={setCurrentPassIndex}/>
   );
 
   return (
@@ -88,6 +103,16 @@ function PassBank({passwordList}: passBankProps) {
 }
 
 function PassDetails({passItem} : passDetailProps) {
+  const [passInputType, setPassInputType] = useState<string>("password");
+
+  function handleShowPassword() {
+    if (passInputType == "password") {
+      setPassInputType("text");
+    } else {
+      setPassInputType("password");
+    }
+  }
+
   return (
     <div className="offcanvas offcanvas-end text-bg-dark w-100" tabIndex={-1} id="passDetailsWindow" aria-labelledby="offcanvasExampleLabel">
       <div className="offcanvas-header">
@@ -97,15 +122,16 @@ function PassDetails({passItem} : passDetailProps) {
       <div className="offcanvas-body">
         <div className="container mb-3">
           <label htmlFor="emailInput" className="form-label">Email address</label>
-          <input type="email" className="form-control" id="emailInput" placeholder="name@example.com"></input>
+          <input type="email" className="form-control" id="emailInput" value={passItem.email}></input>
         </div>
         <div className="container mb-3">
           <label htmlFor="inputPassword5" className="form-label">Password</label>
-          <input type="password" id="inputPassword5" className="form-control" aria-describedby="passwordHelpBlock"></input>
+          <input type={passInputType} id="inputPassword5" className="form-control" value={passItem.password} aria-describedby="passwordHelpBlock"></input>
+          <button type="button" className="btn btn-primary" onClick={handleShowPassword}>Show</button>
         </div>
         <div className="container mb-3">
           <label htmlFor="urlInput" className="form-label">Website</label>
-          <input type="url" className="form-control" id="urlInput" placeholder="www.placeholder.com"></input>
+          <input type="url" className="form-control" id="urlInput" value={passItem.url}></input>
         </div>
       </div>
     </div>
@@ -149,7 +175,6 @@ function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
 function App() {
   const [passwordList, setPasswordList] = useState<Array<PasswordListItem>>([
     {
-      index: 0,
       site_favicon: "/vite.svg",
       username: "placeholder",
       email: "placeholder@gmail.com",
@@ -157,12 +182,11 @@ function App() {
       url: "https://www.google.com"
     }
   ]);
-  const [bodyContent, setBodyContent] = useState<React.ReactNode>(<PassBank passwordList={passwordList}/>);
   const [currentPassIndex, setCurrentPassIndex] = useState<number>(0);
+  const [bodyContent, setBodyContent] = useState<React.ReactNode>(<PassBank setCurrentPassIndex={setCurrentPassIndex} passwordList={passwordList}/>);
 
   function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
     setPasswordList(passwordList.concat({
-      index: passwordList.length-1,
       site_favicon: site_favicon,
       username: username,
       email: email,
@@ -170,13 +194,14 @@ function App() {
       url: url
     }))
   }
+
   
   function onGeneratorClick() {
     setBodyContent(<Generator readonlyPassword={true}/>);
   }
 
   function onBankClick() {
-    setBodyContent(<PassBank passwordList={passwordList}/>);
+    setBodyContent(<PassBank setCurrentPassIndex={setCurrentPassIndex} passwordList={passwordList}/>);
   }
 
   function onNewPasswordClick() {
@@ -188,7 +213,7 @@ function App() {
       <div className='App'>
         <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
         {bodyContent}
-        <PassDetails passIndex={passwordList[currentPassIndex]}/>
+        <PassDetails passItem={passwordList[currentPassIndex]}/>
       </div>
     </>
   )
