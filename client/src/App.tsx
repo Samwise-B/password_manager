@@ -16,6 +16,7 @@ interface passwordCreatorProps {
 interface passBankProps {
   passwordList: Array<PasswordListItem>;
   setCurrentPassIndex: (itemIndex: number) => void;
+  onPassItemClick: () => void;
 }
 
 interface passDetailProps {
@@ -29,6 +30,7 @@ interface passBankItemProps {
   email: string;
   url: string;
   setCurrentPassIndex: (itemIndex: number) => void;
+  setCanvasContent: () => void;
 }
 
 interface OffCanvasProps {
@@ -66,11 +68,12 @@ function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigat
   )
 }
 
-function PassBankItem({index, site_favicon, url, email, username, setCurrentPassIndex}: passBankItemProps) {
+function PassBankItem({index, site_favicon, url, email, username, setCurrentPassIndex, setCanvasContent}: passBankItemProps) {
   const [itemIndex, setItemIndex] = useState<number>(index);
 
   function handleClick() {
     setCurrentPassIndex(itemIndex);
+    setCanvasContent();
   }
 
   return (
@@ -92,9 +95,9 @@ function PassBankItem({index, site_favicon, url, email, username, setCurrentPass
 )
 }
 
-function PassBank({passwordList, setCurrentPassIndex}: passBankProps) {
+function PassBank({passwordList, setCurrentPassIndex, onPassItemClick}: passBankProps) {
   const passBankItems: React.ReactNode = passwordList.map((passItem, index) => 
-    <PassBankItem index={index} site_favicon='/vite.svg' email={passItem.email} username={passItem.username} url={passItem.url} setCurrentPassIndex={setCurrentPassIndex}/>
+    <PassBankItem index={index} site_favicon='/vite.svg' email={passItem.email} username={passItem.username} url={passItem.url} setCurrentPassIndex={setCurrentPassIndex} setCanvasContent={onPassItemClick}/>
   );
 
   return (
@@ -204,7 +207,9 @@ function App() {
   ]);
   const [currentPassIndex, setCurrentPassIndex] = useState<number>(0);
   const [canvasContent, setCanvasContent] = useState<React.ReactNode>(<PassDetails passItem={passwordList[currentPassIndex]}/>);
-  const [bodyContent, setBodyContent] = useState<React.ReactNode>(<PassBank setCurrentPassIndex={setCurrentPassIndex} passwordList={passwordList}/>);
+  const [bodyContent, setBodyContent] = useState<React.ReactNode>(<PassBank 
+    onPassItemClick={onPassItemClick}
+    setCurrentPassIndex={setCurrentPassIndex} passwordList={passwordList}/>);
 
   function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
     setPasswordList(passwordList.concat({
@@ -216,13 +221,16 @@ function App() {
     }))
   }
 
-  
+  function onPassItemClick() {
+    setCanvasContent(<PassDetails passItem={passwordList[currentPassIndex]}/>)
+  }
+
   function onGeneratorClick() {
     setBodyContent(<Generator readonlyPassword={true}/>);
   }
 
   function onBankClick() {
-    setBodyContent(<PassBank setCurrentPassIndex={setCurrentPassIndex} passwordList={passwordList}/>);
+    setBodyContent(<PassBank onPassItemClick={onPassItemClick} setCurrentPassIndex={setCurrentPassIndex} passwordList={passwordList}/>);
   }
 
   function onNewPasswordClick() {
