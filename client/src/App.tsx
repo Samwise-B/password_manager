@@ -132,7 +132,11 @@ function PassDetails({passItem} : passDetailProps) {
           <input type="email" className="form-control" id="emailInput" value={passItem.email}></input>
         </div>
         <div className="container mb-3">
-          <label htmlFor="inputPassword5" className="form-label">Password</label>
+          <label htmlFor="usernameInput" className="form-label">Username</label>
+          <input type="text" className="form-control" id="emailInput" value={passItem.username}></input>
+        </div>
+        <label htmlFor="inputPassword5" className="form-label">Password</label>
+        <div className="container input-group mb-3">
           <input type={passInputType} id="inputPassword5" className="form-control" value={passItem.password} aria-describedby="passwordHelpBlock"></input>
           <button type="button" className="btn btn-primary" onClick={handleShowPassword}>Show</button>
         </div>
@@ -153,9 +157,10 @@ function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
       email: {value: string};
       password: {value: string};
       url: {value: string};
+      username: {value:string};
     }
     const site_favicon = "/vite.svg"
-    const username = "placeholder"
+    const username = target.username.value;
     const email = target.email.value;
     const password = target.password.value;
     const url = target.url.value;
@@ -174,10 +179,14 @@ function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
             <label htmlFor="emailInput" className="form-label">Email address</label>
             <input type="email" className="form-control" id="emailInput" placeholder="name@example.com" name="email"></input>
           </div>
+          <div className="container mb-3">
+            <label htmlFor="usernameInput" className="form-label">Username</label>
+            <input type="us" className="form-control" id="usernameInput" aria-describedby="emailHelp"></input>
+          </div>
           <Generator readonlyPassword={false}/>
           <div className="container mb-3">
             <label htmlFor="urlInput" className="form-label">Website</label>
-            <input type="url" className="form-control" id="urlInput" placeholder="www.placeholder.com" name="url"></input>
+            <input type="url" className="form-control" id="urlInput" placeholder="https://www.placeholder.com" name="url"></input>
           </div>
           <button type="submit" className="btn btn-primary" data-bs-dismiss="offcanvas">Submit</button>
         </form>

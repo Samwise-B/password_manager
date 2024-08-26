@@ -25,10 +25,13 @@ interface passLengthProps {
 function PasswordBox({password, isReadOnly, onRefreshClick, onChangePassword} : passBoxProps) {
 
   return (
-    <div className='PasswordText input-group mb-3'>
-      <input className="form-control" type="text" name="password" value={password} onChange={onChangePassword} id="generatedPassword" readOnly={isReadOnly}></input>
-      <button type='button' className="btn btn-outline-secondary" id="passwordRefresh" onClick={onRefreshClick}>Refresh</button>         
-    </div>
+    <>
+      <label htmlFor="generatedPassword" className="form-label">Password</label>
+      <div className='PasswordText input-group mb-3'>
+        <input className="form-control" type="text" name="password" value={password} onChange={onChangePassword} id="generatedPassword" readOnly={isReadOnly}></input>
+        <button type='button' className="btn btn-outline-secondary" id="passwordRefresh" onClick={onRefreshClick}>Refresh</button>         
+      </div>
+    </>
   )
 }
 
