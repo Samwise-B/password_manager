@@ -166,7 +166,6 @@ function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
   return (
     <>
       <div className="offcanvas-header">
-        <button type="button" className="btn btn-outline-secondary">Edit</button>
         <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
       <div className="offcanvas-body">
@@ -180,7 +179,7 @@ function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
             <label htmlFor="urlInput" className="form-label">Website</label>
             <input type="url" className="form-control" id="urlInput" placeholder="www.placeholder.com" name="url"></input>
           </div>
-          <button type="submit" className="btn btn-primary">Submit</button>
+          <button type="submit" className="btn btn-primary" data-bs-dismiss="offcanvas">Submit</button>
         </form>
       </div>
     </>
@@ -212,13 +211,16 @@ function App() {
     setCurrentPassIndex={setCurrentPassIndex} passwordList={passwordList}/>);
 
   function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
-    setPasswordList(passwordList.concat({
+    const newArr = [...passwordList];
+    newArr.push({
       site_favicon: site_favicon,
       username: username,
       email: email,
       password: password,
       url: url
-    }))
+    });
+    setPasswordList(newArr);
+    setBodyContent(<PassBank onPassItemClick={onPassItemClick} setCurrentPassIndex={setCurrentPassIndex} passwordList={newArr}/>);
   }
 
   function onPassItemClick() {
