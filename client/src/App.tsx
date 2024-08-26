@@ -188,7 +188,7 @@ function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
             <label htmlFor="urlInput" className="form-label">Website</label>
             <input type="url" className="form-control" id="urlInput" placeholder="https://www.placeholder.com" name="url"></input>
           </div>
-          <button type="submit" className="btn btn-primary" data-bs-dismiss="offcanvas">Submit</button>
+          <button type="submit" className="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Submit</button>
         </form>
       </div>
     </>
