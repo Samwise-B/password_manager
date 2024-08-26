@@ -31,6 +31,10 @@ interface passBankItemProps {
   setCurrentPassIndex: (itemIndex: number) => void;
 }
 
+interface OffCanvasProps {
+  canvasContent: React.ReactNode;
+}
+
 type PasswordListItem = {
   site_favicon: string;
   username: string;
@@ -52,7 +56,7 @@ function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigat
               <button type="button" className="nav-link" onClick={onGeneratorClick}>Generator</button>
             </li>
           </ul>
-          <button type="button" className="btn btn-outline-primary mx-2 align-items-center" onClick={onNewPasswordClick}>New</button>
+          <button type="button" className="btn btn-outline-primary mx-2 align-items-center" onClick={onNewPasswordClick} data-bs-toggle="offcanvas" data-bs-target="#offCanvasWindow">New</button>
         </div>
       </div>
       <div className='input-group mb-3'>
@@ -70,7 +74,7 @@ function PassBankItem({index, site_favicon, url, email, username, setCurrentPass
   }
 
   return (
-    <button type="button" className="list-group-item list-group-item-action rounded-0" onClick={handleClick} data-bs-toggle="offcanvas" data-bs-target="#passDetailsWindow" aria-current="true">
+    <button type="button" className="list-group-item list-group-item-action rounded-0" onClick={handleClick} data-bs-toggle="offcanvas" data-bs-target="#offCanvasWindow" aria-current="true">
       <div className="row">
         <div className="col-sm-1 fw-bold">
           <img src={site_favicon} alt="" className="rounded"></img>
@@ -114,7 +118,7 @@ function PassDetails({passItem} : passDetailProps) {
   }
 
   return (
-    <div className="offcanvas offcanvas-end text-bg-dark w-100" tabIndex={-1} id="passDetailsWindow" aria-labelledby="offcanvasExampleLabel">
+    <>
       <div className="offcanvas-header">
         <button type="button" className="btn btn-outline-secondary">Edit</button>
         <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -134,7 +138,7 @@ function PassDetails({passItem} : passDetailProps) {
           <input type="url" className="form-control" id="urlInput" value={passItem.url}></input>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -157,19 +161,35 @@ function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
   }
 
   return (
-    <form onSubmit={addNewPassword}>
-      <div className="container mb-3">
-        <label htmlFor="emailInput" className="form-label">Email address</label>
-        <input type="email" className="form-control" id="emailInput" placeholder="name@example.com" name="email"></input>
+    <>
+      <div className="offcanvas-header">
+        <button type="button" className="btn btn-outline-secondary">Edit</button>
+        <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
-      <Generator readonlyPassword={false}/>
-      <div className="container mb-3">
-        <label htmlFor="urlInput" className="form-label">Website</label>
-        <input type="url" className="form-control" id="urlInput" placeholder="www.placeholder.com" name="url"></input>
+      <div className="offcanvas-body">
+        <form onSubmit={addNewPassword}>
+          <div className="container mb-3">
+            <label htmlFor="emailInput" className="form-label">Email address</label>
+            <input type="email" className="form-control" id="emailInput" placeholder="name@example.com" name="email"></input>
+          </div>
+          <Generator readonlyPassword={false}/>
+          <div className="container mb-3">
+            <label htmlFor="urlInput" className="form-label">Website</label>
+            <input type="url" className="form-control" id="urlInput" placeholder="www.placeholder.com" name="url"></input>
+          </div>
+          <button type="submit" className="btn btn-primary">Submit</button>
+        </form>
       </div>
-      <button type="submit" className="btn btn-primary">Submit</button>
-    </form>
+    </>
   )
+}
+
+function OffCanvasWindow({canvasContent} : OffCanvasProps) {
+  return (
+    <div className="offcanvas offcanvas-end text-bg-dark w-100" tabIndex={-1} id="offCanvasWindow" aria-labelledby="offcanvasExampleLabel">
+      {canvasContent}
+    </div>
+  );
 }
 
 function App() {
@@ -183,6 +203,7 @@ function App() {
     }
   ]);
   const [currentPassIndex, setCurrentPassIndex] = useState<number>(0);
+  const [canvasContent, setCanvasContent] = useState<React.ReactNode>(<PassDetails passItem={passwordList[currentPassIndex]}/>);
   const [bodyContent, setBodyContent] = useState<React.ReactNode>(<PassBank setCurrentPassIndex={setCurrentPassIndex} passwordList={passwordList}/>);
 
   function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
@@ -205,7 +226,7 @@ function App() {
   }
 
   function onNewPasswordClick() {
-    setBodyContent(<PasswordCreator updatePasswordList={updatePasswordList}/>);
+    setCanvasContent(<PasswordCreator updatePasswordList={updatePasswordList}/>);
   }
 
   return (
@@ -213,7 +234,7 @@ function App() {
       <div className='App'>
         <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
         {bodyContent}
-        <PassDetails passItem={passwordList[currentPassIndex]}/>
+        <OffCanvasWindow canvasContent={canvasContent}/>
       </div>
     </>
   )
