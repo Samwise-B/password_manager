@@ -1,12 +1,20 @@
-import { useEffect, useState } from 'react';
+import { HTMLInputTypeAttribute, useEffect, useState } from 'react';
 import './App.css'
 import Generator from './Generator'
-
+import {useForm, FormProvider, useFormContext} from "react-hook-form"
+import { ErrorMessage } from "@hookform/error-message";
 
 interface navigationProps {
   onGeneratorClick: () => void,
   onBankClick: () => void,
   onNewPasswordClick: () => void
+}
+
+interface IInputProps {
+  label: string,
+  type: HTMLInputTypeAttribute, 
+  id: string, 
+  placeholder: string
 }
 
 interface passwordCreatorProps {
@@ -149,9 +157,75 @@ function PassDetails({passItem} : passDetailProps) {
   )
 }
 
+function Input({ label, type, id, placeholder }: IInputProps) {
+  const { register, formState: {errors} } = useFormContext();
+
+  return (
+    <div className="container mb-3">
+      <div className='container mb-3'>
+        <label htmlFor={id} className="form-label">{label}</label>
+      </div>
+      <input type={type} className="form-control" id={id} placeholder={placeholder} {...register(label, {
+        required: {
+          value: true,
+          message: "required"
+        },
+      })}/>
+      <ErrorMessage errors={errors} name={label}/>
+    </div>
+  );
+}
+
+function NewPasswordForm() {
+  const methods = useForm();
+
+  const onSubmit = methods.handleSubmit(data => {
+    console.log(data);
+  })
+
+  return (
+    <FormProvider {...methods}>
+      <form onSubmit={e => e.preventDefault()} className="container" noValidate>
+        <Input
+          label="Username"
+          type="text"
+          id="username"
+          placeholder="type your username..."
+        />
+        <Input
+          label="Email"
+          type="email"
+          id="email"
+          placeholder="example@email.com"
+        />
+        <Generator readonlyPassword={false}/>
+        <Input
+          label="Website URL"
+          type="url"
+          id="url"
+          placeholder="https://www.placeholder.com"
+        />
+        <div className="container">
+          <button
+            onClick={onSubmit}
+            className="btn btn-secondary"
+          >
+            Submit
+          </button>
+        </div>
+      </form>
+    </FormProvider>
+  );
+}
+
 function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
   function addNewPassword(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
+    const form = event.target as HTMLFormElement;
+
+    if (!form.checkValidity()) {
+      event.stopPropagation();
+    }
     console.log("test");
     const target = event.target as typeof event.target & {
       email: {value: string};
@@ -174,22 +248,26 @@ function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
         <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
       <div className="offcanvas-body">
-        <form onSubmit={addNewPassword}>
+        <NewPasswordForm/>
+        {/* <form onSubmit={addNewPassword} className="needs-validation" noValidate={true}>
           <div className="container mb-3">
             <label htmlFor="emailInput" className="form-label">Email address</label>
-            <input type="email" className="form-control" id="emailInput" placeholder="name@example.com" name="email"></input>
+            <input type="email" className="form-control" id="emailInput" placeholder="name@example.com" name="email" required></input>
+            <div className='username-validation'>
+              Please choose a username.
+            </div>
           </div>
           <div className="container mb-3">
             <label htmlFor="usernameInput" className="form-label">Username</label>
-            <input type="us" className="form-control" id="usernameInput" aria-describedby="emailHelp"></input>
+            <input type="us" className="form-control" id="usernameInput" aria-describedby="emailHelp" required></input>
           </div>
           <Generator readonlyPassword={false}/>
           <div className="container mb-3">
             <label htmlFor="urlInput" className="form-label">Website</label>
             <input type="url" className="form-control" id="urlInput" placeholder="https://www.placeholder.com" name="url"></input>
           </div>
-          <button type="submit" className="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Submit</button>
-        </form>
+          <button type="submit" className="btn btn-outline-secondary">Submit</button>
+        </form> */}
       </div>
     </>
   )

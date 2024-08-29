@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import {useForm, FormProvider, useFormContext} from "react-hook-form"
+import { generatePassword } from './utils/generatePassword';
 
 interface generatorProps {
   readonlyPassword: boolean;
@@ -22,13 +24,27 @@ interface passLengthProps {
   handleLength: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-function PasswordBox({password, isReadOnly, onRefreshClick, onChangePassword} : passBoxProps) {
+function PasswordBoxInput({password, isReadOnly, onChangePassword} : passBoxProps) {
+  if (isReadOnly) {
+    return <input className="form-control" type="text" value={password} id="generatedPassword" onChange={onChangePassword} readOnly={isReadOnly}/>
+  } else {
+    const { register } = useFormContext();
+    return <input className="form-control" type="text" value={password} id="generatedPassword" readOnly={isReadOnly} {...register("password", {
+      onChange: onChangePassword,
+      required: {
+        value: true,
+        message: "required"
+      },
+    })}/>
+  }
+}
 
+function PasswordBox({password, isReadOnly, onRefreshClick, onChangePassword} : passBoxProps) {
   return (
     <>
       <label htmlFor="generatedPassword" className="form-label">Password</label>
       <div className='PasswordText input-group mb-3'>
-        <input className="form-control" type="text" name="password" value={password} onChange={onChangePassword} id="generatedPassword" readOnly={isReadOnly}></input>
+        <PasswordBoxInput password={password} isReadOnly={isReadOnly} onRefreshClick={onRefreshClick} onChangePassword={onChangePassword}/>
         <button type='button' className="btn btn-outline-secondary" id="passwordRefresh" onClick={onRefreshClick}>Refresh</button>         
       </div>
     </>
@@ -72,37 +88,12 @@ export default function Generator({readonlyPassword} : generatorProps) {
   const [password, setPass] = useState<string>("");
 
   useEffect(() => {
-    generatePassword();
+    setPass(generatePassword({passLength, hasLetters, hasDigits, hasSymbols}));
   }, [hasLetters, hasDigits, hasSymbols, passLength]);
 
-  function generatePassword() {
-    const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const digits = "0123456789";
-    const symbols = ";@#!?~";
-    let chars = "";
-    if (hasLetters) {
-      chars += letters;
-    }
-    if (hasDigits) {
-      chars += digits;
-    }
-    if (hasSymbols) {
-      chars += symbols;
-    }
-
-    if (chars == "") {
-      setPass("");
-    }
-    else {
-      const num_chars = chars.length;
-      const pass_ints = new Uint32Array(passLength);
-      const pass_buff = window.crypto.getRandomValues(pass_ints);
-      let pass: string = "";
-      pass_buff.forEach((i) => {
-        pass += chars[i % num_chars];
-      });
-      setPass(pass);
-    }
+  function getPassword() {
+    let pass_tmp = generatePassword({passLength, hasLetters, hasDigits, hasSymbols});
+    setPass(pass_tmp);
   }
 
   function onChangePassword(e: React.ChangeEvent<HTMLInputElement>) {
@@ -126,8 +117,8 @@ export default function Generator({readonlyPassword} : generatorProps) {
   }
 
   return (
-    <div className='Generator container-sm'>
-          <PasswordBox onRefreshClick={generatePassword} password={password} onChangePassword={onChangePassword} isReadOnly={readonlyPassword}/>
+    <div className='container-sm'>
+          <PasswordBox onRefreshClick={getPassword} password={password} onChangePassword={onChangePassword} isReadOnly={readonlyPassword}/>
           <PassLength passLength={passLength} handleLength={handleLength}/>
           <div className='mb-3'>
               <Checkbox flagType={"Letters"} hasFlag={hasLetters} handleFlag={handleHasLetters}/>
