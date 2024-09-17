@@ -1,7 +1,7 @@
 import { HTMLInputTypeAttribute, useEffect, useState } from 'react';
 import './App.css'
 import Generator from './Generator'
-import {useForm, FormProvider, useFormContext} from "react-hook-form"
+import {useForm, FormProvider, useFormContext, FieldError, FieldErrorsImpl} from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import Button from 'react-bootstrap/Button';
@@ -16,7 +16,20 @@ interface IInputProps {
   label: string,
   type: HTMLInputTypeAttribute, 
   id: string, 
-  placeholder: string
+  placeholder: string,
+  pattern: RegExp,
+  errorMessage: string
+}
+
+interface IFromInputs {
+  username: string,
+  email: string,
+  url: string,
+
+}
+
+interface IErrorProps {
+  errorMessage: string
 }
 
 interface passwordCreatorProps {
@@ -163,7 +176,7 @@ function PassDetails({passList, currentIndex} : passDetailProps) {
   )
 }
 
-function Input({ label, type, id, placeholder }: IInputProps) {
+function Input({ label, type, id, placeholder, pattern, errorMessage }: IInputProps) {
   const { register, formState: {errors} } = useFormContext();
 
   return (
@@ -171,19 +184,31 @@ function Input({ label, type, id, placeholder }: IInputProps) {
       <div className='container mb-3'>
         <label htmlFor={id} className="form-label">{label}</label>
       </div>
-      <input type={type} className="form-control" id={id} placeholder={placeholder} {...register(label, {
-        required: {
-          value: true,
-          message: "required"
+      <input type={type} className="form-control" id={id} placeholder={placeholder} {...register(id, {
+        required: "This field is required",
+        pattern: {
+          value: pattern,
+          message: errorMessage
         },
-      })}/>
-      <ErrorMessage errors={errors} name={label}/>
+        })}/>
+      <ErrorMessage
+        errors={errors}
+        name={id}
+        render={({ messages }) => 
+          messages &&
+          Object.entries(messages).map(([type, message]) => (
+            <p key={type}>{message}</p>
+          ))
+        }
+      />
     </div>
   );
 }
 
 function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
-  const methods = useForm();
+  const methods = useForm({
+    criteriaMode: "all"
+  });
 
   const onSubmit = methods.handleSubmit(data => {
     console.log(data);
@@ -203,12 +228,16 @@ function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
           type="text"
           id="username"
           placeholder="type your username..."
+          pattern={/(?=.{8,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])/}
+          errorMessage = "You must enter a username between 8 and 20 characters"
         />
         <Input
           label="Email"
           type="email"
           id="email"
           placeholder="example@email.com"
+          pattern={/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/}
+          errorMessage = "You must enter a valid email"
         />
         <Generator readonlyPassword={false}/>
         <Input
@@ -216,6 +245,8 @@ function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
           type="url"
           id="url"
           placeholder="https://www.placeholder.com"
+          pattern={/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/}
+          errorMessage = "You must enter a valid website URL"
         />
         <div className="container">
           <button
