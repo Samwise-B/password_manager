@@ -197,7 +197,7 @@ function Input({ label, type, id, placeholder, pattern, errorMessage }: IInputPr
         render={({ messages }) => 
           messages &&
           Object.entries(messages).map(([type, message]) => (
-            <p key={type}>{message}</p>
+            <p key={type} className='text-danger'>{message}</p>
           ))
         }
       />
@@ -324,7 +324,7 @@ function OffCanvasWindow({renderCanvasContent, show, setShow} : OffCanvasProps) 
     setShow(false);
   }
   return (
-    <Offcanvas show={show} onHide={handleClose} id="offCanvasWindow">
+    <Offcanvas show={show} onHide={handleClose} id="offCanvasWindow" placement='end' className='w-75 bg-dark text-light'>
       {renderCanvasContent()}
     </Offcanvas>
   );

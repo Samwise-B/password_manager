@@ -70,13 +70,13 @@ function PassLength({passLength, handleLength}: passLengthProps) {
   return (
     <div className='row g-2 align-items-center'>
       <div className='col-auto'>
-        <label htmlFor="passwordLength" className="form-label text-dark">Length</label>
+        <label htmlFor="passwordLength" className="form-label text-light">Length</label>
       </div>
       <div className='col-auto'>
         <input type="range" className="form-range" value={passLength} min={4} max={48} step={1} id="passwordLength" onChange={handleLength}></input>
       </div>
       <div className='col-auto'>
-        <span className='form-text text-dark'>{passLength}</span>
+        <span className='form-text text-light'>{passLength}</span>
       </div>
     </div>
   )
@@ -87,7 +87,7 @@ function Checkbox({flagType, hasFlag, handleFlag}: checkboxProps) {
   return (
     <div className="form-check">
       <input className="form-check-input" type="checkbox" value="" id={flagType} onChange={handleFlag} checked={hasFlag}></input>
-      <label className="form-check-label text-dark" htmlFor={flagType}>
+      <label className="form-check-label text-light" htmlFor={flagType}>
         {flagType}
       </label>
     </div>
@@ -140,7 +140,7 @@ export default function Generator({readonlyPassword} : generatorProps) {
         render={({ messages }) => 
           messages &&
           Object.entries(messages).map(([type, message]) => (
-            <p className="text-dark" key={type}>{message}</p>
+            <p className="text-danger" key={type}>{message}</p>
           ))
         }
       />)
