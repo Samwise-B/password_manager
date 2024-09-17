@@ -5,6 +5,7 @@ import {useForm, FormProvider, useFormContext, FieldError, FieldErrorsImpl} from
 import { ErrorMessage } from "@hookform/error-message";
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import Button from 'react-bootstrap/Button';
+import { OffcanvasHeader } from 'react-bootstrap';
 
 interface navigationProps {
   onGeneratorClick: () => void,
@@ -151,25 +152,27 @@ function PassDetails({passList, currentIndex} : passDetailProps) {
         <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div> */}
       <Offcanvas.Header closeButton>
-        <Offcanvas.Title>Password Details</Offcanvas.Title>
+        <Offcanvas.Title className='container'>Password Details</Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
-        <div className="container mb-3">
-          <label htmlFor="emailInput" className="form-label">Email address</label>
-          <input type="email" className="form-control" id="emailInput" value={passItem.email}></input>
-        </div>
-        <div className="container mb-3">
-          <label htmlFor="usernameInput" className="form-label">Username</label>
-          <input type="text" className="form-control" id="emailInput" value={passItem.username}></input>
-        </div>
-        <label htmlFor="inputPassword5" className="form-label">Password</label>
-        <div className="container input-group mb-3">
-          <input type={passInputType} id="inputPassword5" className="form-control" value={passItem.password} aria-describedby="passwordHelpBlock"></input>
-          <button type="button" className="btn btn-primary" onClick={handleShowPassword}>Show</button>
-        </div>
-        <div className="container mb-3">
-          <label htmlFor="urlInput" className="form-label">Website</label>
-          <input type="url" className="form-control" id="urlInput" value={passItem.url}></input>
+        <div className="container">
+          <div className="container mb-3">
+            <label htmlFor="emailInput" className="form-label">Email address</label>
+            <input type="email" className="form-control" id="emailInput" value={passItem.email}></input>
+          </div>
+          <div className="container mb-3">
+            <label htmlFor="usernameInput" className="form-label">Username</label>
+            <input type="text" className="form-control" id="emailInput" value={passItem.username}></input>
+          </div>
+          <label htmlFor="inputPassword5" className="form-label">Password</label>
+          <div className="container input-group mb-3">
+            <input type={passInputType} id="inputPassword5" className="form-control" value={passItem.password} aria-describedby="passwordHelpBlock"></input>
+            <button type="button" className="btn btn-primary" onClick={handleShowPassword}>Show</button>
+          </div>
+          <div className="container mb-3">
+            <label htmlFor="urlInput" className="form-label">Website</label>
+            <input type="url" className="form-control" id="urlInput" value={passItem.url}></input>
+          </div>
         </div>
       </Offcanvas.Body>
     </>
@@ -288,10 +291,10 @@ function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
 
   return (
     <>
-      <div className="offcanvas-header">
-        <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div>
-      <div className="offcanvas-body">
+      <Offcanvas.Header closeButton>
+        <Offcanvas.Title>New Password</Offcanvas.Title>
+      </Offcanvas.Header>
+      <Offcanvas.Body>
         <NewPasswordForm updatePasswordList={updatePasswordList}/>
         {/* <form onSubmit={addNewPassword} className="needs-validation" noValidate={true}>
           <div className="container mb-3">
@@ -312,7 +315,7 @@ function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
           </div>
           <button type="submit" className="btn btn-outline-secondary">Submit</button>
         </form> */}
-      </div>
+      </Offcanvas.Body>
     </>
   )
 }
