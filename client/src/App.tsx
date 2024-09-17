@@ -25,7 +25,6 @@ interface passwordCreatorProps {
 
 interface passBankProps {
   passwordList: Array<PasswordListItem>;
-  setCurrentPassIndex: (itemIndex: number) => void;
   onPassItemClick: (index: number) => void;
 }
 
@@ -105,7 +104,7 @@ function PassBankItem({index, site_favicon, url, email, username, onPassItemClic
 )
 }
 
-function PassBank({passwordList, setCurrentPassIndex, onPassItemClick}: passBankProps) {
+function PassBank({passwordList, onPassItemClick}: passBankProps) {
   const passBankItems: React.ReactNode = passwordList.map((passItem, index) => 
     <PassBankItem index={index} site_favicon='/vite.svg' email={passItem.email} username={passItem.username} url={passItem.url} onPassItemClick={onPassItemClick}/>
   );
@@ -313,9 +312,10 @@ function App() {
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [currentPassIndex, setCurrentPassIndex] = useState<number>(0);
   const [canvasContent, setCanvasContent] = useState<string>("details");
-  const [bodyContent, setBodyContent] = useState<React.ReactNode>(<PassBank 
-    onPassItemClick={onPassItemClick}
-    setCurrentPassIndex={setCurrentPassIndex} passwordList={passwordList}/>);
+  const [bodyContent, setBodyContent] = useState<React.ReactNode>(
+    <PassBank 
+      onPassItemClick={onPassItemClick}
+      passwordList={passwordList}/>);
   
 
   function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
@@ -328,7 +328,7 @@ function App() {
       url: url
     });
     setPasswordList(newArr);
-    setBodyContent(<PassBank onPassItemClick={onPassItemClick} setCurrentPassIndex={setCurrentPassIndex} passwordList={newArr}/>);
+    setBodyContent(<PassBank onPassItemClick={onPassItemClick} passwordList={newArr}/>);
   }
 
   function onPassItemClick(index: number) {
@@ -343,8 +343,7 @@ function App() {
 
   function onBankClick() {
     setBodyContent(<PassBank 
-      onPassItemClick={onPassItemClick} 
-      setCurrentPassIndex={setCurrentPassIndex} 
+      onPassItemClick={onPassItemClick}  
       passwordList={passwordList}/>);
   }
 
