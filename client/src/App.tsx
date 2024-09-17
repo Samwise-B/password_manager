@@ -181,7 +181,7 @@ function Input({ label, type, id, placeholder, pattern, errorMessage }: IInputPr
 
   return (
     <div className="container mb-3">
-      <div className='container mb-3'>
+      <div className='container'>
         <label htmlFor={id} className="form-label">{label}</label>
       </div>
       <input type={type} className="form-control" id={id} placeholder={placeholder} {...register(id, {
