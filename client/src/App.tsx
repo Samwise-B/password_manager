@@ -151,7 +151,7 @@ function PassDetails({passList, currentIndex} : passDetailProps) {
         <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div> */}
       <Offcanvas.Header closeButton>
-        <Offcanvas.Title>New Password</Offcanvas.Title>
+        <Offcanvas.Title>Password Details</Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
         <div className="container mb-3">
@@ -213,10 +213,10 @@ function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
   const onSubmit = methods.handleSubmit(data => {
     console.log(data);
     const site_favicon = "/vite.svg"
-    const username = data.Username;
-    const email = data.Email;
+    const username = data.username;
+    const email = data.email;
     const password = data.password;
-    const url = data['Website URL']
+    const url = data.url
     updatePasswordList({site_favicon, username, email, password, url});
   })
 
