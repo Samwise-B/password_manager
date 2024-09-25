@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import {useForm, FormProvider, useFormContext} from "react-hook-form"
+import { ErrorMessage } from "@hookform/error-message";
+import { generatePassword } from './utils/generatePassword';
 
 interface generatorProps {
   readonlyPassword: boolean;
@@ -23,12 +26,43 @@ interface passLengthProps {
 }
 
 function PasswordBox({password, isReadOnly, onRefreshClick, onChangePassword} : passBoxProps) {
+  const label = "password";
+  let passwordInput;
+  let errorMessage;
+  
+  if (isReadOnly) {
+    passwordInput = (
+      <input className="form-control" type="text" value={password} id="generatedPassword" onChange={onChangePassword} readOnly={isReadOnly}/>
+    )
+  } else {
+    const { register, formState: {errors}, setValue } = useFormContext();
+    passwordInput = (
+      <>
+        <input className="form-control" type="text" id="generatedPassword" readOnly={isReadOnly} {...register(label, {
+        onChange: onChangePassword,
+        required: {
+          value: true,
+          message: "A password is required"
+        },
+        maxLength: {
+          value: 48,
+          message: "Password must be no more than 48 characters."
+        }
+        })}/>
+      </>
+    );
+    setValue("password", password);
+  }
 
   return (
-    <div className='PasswordText input-group mb-3'>
-      <input className="form-control" type="text" name="password" value={password} onChange={onChangePassword} id="generatedPassword" readOnly={isReadOnly}></input>
-      <button type='button' className="btn btn-outline-secondary" id="passwordRefresh" onClick={onRefreshClick}>Refresh</button>         
-    </div>
+    <>
+      <label htmlFor="generatedPassword" className="form-label">Password</label>
+      {errorMessage}
+      <div className='PasswordText input-group mb-3'>
+        {passwordInput}
+        <button type='button' className="btn btn-outline-secondary" id="passwordRefresh" onClick={onRefreshClick}>Refresh</button>      
+      </div>
+    </>
   )
 }
 
@@ -36,13 +70,13 @@ function PassLength({passLength, handleLength}: passLengthProps) {
   return (
     <div className='row g-2 align-items-center'>
       <div className='col-auto'>
-        <label htmlFor="passwordLength" className="form-label">Length</label>
+        <label htmlFor="passwordLength" className="form-label text-light">Length</label>
       </div>
       <div className='col-auto'>
         <input type="range" className="form-range" value={passLength} min={4} max={48} step={1} id="passwordLength" onChange={handleLength}></input>
       </div>
       <div className='col-auto'>
-        <span className='form-text'>{passLength}</span>
+        <span className='form-text text-light'>{passLength}</span>
       </div>
     </div>
   )
@@ -53,7 +87,7 @@ function Checkbox({flagType, hasFlag, handleFlag}: checkboxProps) {
   return (
     <div className="form-check">
       <input className="form-check-input" type="checkbox" value="" id={flagType} onChange={handleFlag} checked={hasFlag}></input>
-      <label className="form-check-label" htmlFor={flagType}>
+      <label className="form-check-label text-light" htmlFor={flagType}>
         {flagType}
       </label>
     </div>
@@ -69,37 +103,12 @@ export default function Generator({readonlyPassword} : generatorProps) {
   const [password, setPass] = useState<string>("");
 
   useEffect(() => {
-    generatePassword();
+    setPass(generatePassword({passLength, hasLetters, hasDigits, hasSymbols}));
   }, [hasLetters, hasDigits, hasSymbols, passLength]);
 
-  function generatePassword() {
-    const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const digits = "0123456789";
-    const symbols = ";@#!?~";
-    let chars = "";
-    if (hasLetters) {
-      chars += letters;
-    }
-    if (hasDigits) {
-      chars += digits;
-    }
-    if (hasSymbols) {
-      chars += symbols;
-    }
-
-    if (chars == "") {
-      setPass("");
-    }
-    else {
-      const num_chars = chars.length;
-      const pass_ints = new Uint32Array(passLength);
-      const pass_buff = window.crypto.getRandomValues(pass_ints);
-      let pass: string = "";
-      pass_buff.forEach((i) => {
-        pass += chars[i % num_chars];
-      });
-      setPass(pass);
-    }
+  function getPassword() {
+    let pass_tmp = generatePassword({passLength, hasLetters, hasDigits, hasSymbols});
+    setPass(pass_tmp);
   }
 
   function onChangePassword(e: React.ChangeEvent<HTMLInputElement>) {
@@ -122,15 +131,32 @@ export default function Generator({readonlyPassword} : generatorProps) {
     setPassLength(parseInt(event.target.value));
   }
 
+  function renderErrorMessage() {
+    if (!readonlyPassword) {
+      const { formState: {errors} } = useFormContext();
+      return (<ErrorMessage
+        errors={errors}
+        name="password"
+        render={({ messages }) => 
+          messages &&
+          Object.entries(messages).map(([type, message]) => (
+            <p className="text-danger" key={type}>{message}</p>
+          ))
+        }
+      />)
+    }
+  }
+
   return (
-    <div className='Generator container-sm'>
-          <PasswordBox onRefreshClick={generatePassword} password={password} onChangePassword={onChangePassword} isReadOnly={readonlyPassword}/>
+    <div className='container-sm text-dark'>
+          <PasswordBox onRefreshClick={getPassword} password={password} onChangePassword={onChangePassword} isReadOnly={readonlyPassword}/>
           <PassLength passLength={passLength} handleLength={handleLength}/>
           <div className='mb-3'>
               <Checkbox flagType={"Letters"} hasFlag={hasLetters} handleFlag={handleHasLetters}/>
               <Checkbox flagType={"Digits"} hasFlag={hasDigits} handleFlag={handleHasDigits}/>
               <Checkbox flagType={"Symbols"} hasFlag={hasSymbols} handleFlag={handleHasSymbols}/>
           </div>
+          {renderErrorMessage()}
     </div>
   )
 }
