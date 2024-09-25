@@ -56,6 +56,12 @@ interface passBankItemProps {
   onPassItemClick: (index: number) => void;
 }
 
+interface IEditButtonProps {
+  isEditing: boolean;
+  handleEditPassword: () => void;
+  updatePassword: () => void;
+}
+
 interface OffCanvasProps {
   renderCanvasContent: () => React.ReactNode;
   show: boolean;
@@ -132,10 +138,21 @@ function PassBank({passwordList, onPassItemClick}: passBankProps) {
   )
 }
 
+function EditButton({isEditing, handleEditPassword, updatePassword}: IEditButtonProps) {
+  if (!isEditing) {
+    return <button type="button" className="btn btn-primary mx-3" onClick={handleEditPassword}>Edit</button>;
+  } else {
+    return <button type="button" className="btn btn-primary mx-3" onClick={updatePassword}>Done</button>;
+  }
+  
+}
+
 function PassDetails({passList, currentIndex} : passDetailProps) {
   const [passInputType, setPassInputType] = useState<string>("password");
-  const passItem = passList[currentIndex];
-  console.log(passItem);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [passItem, setPassItem] = useState<PasswordListItem>(passList[currentIndex]);
+  //const passItem = passList[currentIndex];
+  //console.log(passItem);
 
   function handleShowPassword() {
     if (passInputType == "password") {
@@ -145,33 +162,63 @@ function PassDetails({passList, currentIndex} : passDetailProps) {
     }
   }
 
+  function handleEditPassword() {
+    setIsEditing(true);
+  }
+
+  function updatePassword() {
+    // TODO update passList
+    setIsEditing(false);
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const {id, value} = e.target;
+    setPassItem((prevItem) => ({
+      ...prevItem,
+      [id]:value
+    }));
+    console.log(passItem)
+  }
+
   return (
     <>
-      {/* <div className="offcanvas-header">
-        <button type="button" className="btn btn-outline-secondary">Edit</button>
-        <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div> */}
       <Offcanvas.Header closeButton>
-        <Offcanvas.Title className='container'>Password Details</Offcanvas.Title>
+        <Offcanvas.Title className='container d-flex justify-content-center'>Password Details</Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
         <div className="container">
           <div className="container mb-3">
-            <label htmlFor="emailInput" className="form-label">Email address</label>
-            <input type="email" className="form-control" id="emailInput" value={passItem.email}></input>
+            <label htmlFor="email" className="form-label">Email address</label>
+            <input type="email" className="form-control" id="email" 
+              value={passItem.email} 
+              readOnly={!isEditing} 
+              onChange={handleChange}></input>
           </div>
           <div className="container mb-3">
-            <label htmlFor="usernameInput" className="form-label">Username</label>
-            <input type="text" className="form-control" id="emailInput" value={passItem.username}></input>
+            <label htmlFor="username" className="form-label">Username</label>
+            <input type="text" className="form-control" id="username" 
+            value={passItem.username} 
+            readOnly={!isEditing} 
+            onChange={handleChange}></input>
           </div>
-          <label htmlFor="inputPassword5" className="form-label">Password</label>
+          <label htmlFor="password" className="form-label">Password</label>
           <div className="container input-group mb-3">
-            <input type={passInputType} id="inputPassword5" className="form-control" value={passItem.password} aria-describedby="passwordHelpBlock"></input>
+            <input type={passInputType} id="password" className="form-control" aria-describedby="passwordHelpBlock" 
+            value={passItem.password}  
+            readOnly={!isEditing}
+            onChange={handleChange}></input>
             <button type="button" className="btn btn-primary" onClick={handleShowPassword}>Show</button>
           </div>
           <div className="container mb-3">
-            <label htmlFor="urlInput" className="form-label">Website</label>
-            <input type="url" className="form-control" id="urlInput" value={passItem.url}></input>
+            <label htmlFor="url" className="form-label">Website</label>
+            <input type="url" className="form-control" id="url" 
+            value={passItem.url} 
+            readOnly={!isEditing}
+            onChange={handleChange}></input>
+          </div>
+          <div className='container d-flex justify-content-center'>
+            <EditButton isEditing={isEditing} handleEditPassword={handleEditPassword} updatePassword={updatePassword}/>
+            <button type="button" className="btn btn-primary mx-3">Delete</button>
           </div>
         </div>
       </Offcanvas.Body>
