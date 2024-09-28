@@ -1,19 +1,26 @@
 import express, {Express, Request, response, Response} from "express";
 import { Pool } from "pg";
 import dotenv from "dotenv";
+import cors from 'cors';
 
+const corsOptions = {
+  origin: ["http://localhost:5173", "http://localhost:5432"],
+  optionsSuccessStatus:200
+}
 // add .env configuration
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 5000; // You can choose any port
 
+app.use(cors(corsOptions));
+
 const pool = new Pool({
   user: process.env.POSTGRES_USER,
   host: process.env.POSTGRES_HOST,
   database: process.env.POSTGRES_DB,
   password: process.env.POSTGRES_PASSWORD,
-  port: process.env.POSTGRES_PORT,
+  port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT): undefined,
 })
 
 app.get('/getPasswords', async (req: Request, res: Response) => {

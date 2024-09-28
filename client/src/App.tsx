@@ -260,29 +260,6 @@ function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
 }
 
 function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
-  function addNewPassword(event: React.FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
-    const form = event.target as HTMLFormElement;
-
-    if (!form.checkValidity()) {
-      event.stopPropagation();
-    }
-    console.log("test");
-    const target = event.target as typeof event.target & {
-      email: {value: string};
-      password: {value: string};
-      url: {value: string};
-      username: {value:string};
-    }
-    const site_favicon = "/vite.svg"
-    const username = target.username.value;
-    const email = target.email.value;
-    const password = target.password.value;
-    const url = target.url.value;
-    console.log(email, password, url)
-    updatePasswordList({site_favicon, username, email, password, url});
-  }
-
   return (
     <>
       <Offcanvas.Header closeButton>
@@ -328,22 +305,38 @@ function OffCanvasWindow({renderCanvasContent, show, setShow} : OffCanvasProps) 
 }
 
 function App() {
-  const [passwordList, setPasswordList] = useState<Array<PasswordListItem>>([
-    {
-      site_favicon: "/vite.svg",
-      username: "placeholder",
-      email: "placeholder@gmail.com",
-      password: "test123",
-      url: "https://www.google.com"
-    }
-  ]);
+  const [passwordList, setPasswordList] = useState<Array<PasswordListItem>>([]);
   const [filterString, setFilterString] = useState<string>("");
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [currentPassIndex, setCurrentPassIndex] = useState<number>(0);
   const [canvasContent, setCanvasContent] = useState<string>("details");
   const [bodyContent, setBodyContent] = useState<string>("passbank");
+
+  useEffect(() => {
+    const fetchPassList = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/getPasswords');
+        if (!res.ok) {
+          throw new Error('HTTP error: Status ${res.status}')
+        }
+        let passList = await res.json();
+        console.log(passList);
+        setPasswordList(passList);
+      } catch (err) {
+        console.log(err);
+        setPasswordList([]);
+      }
+    };
+
+    fetchPassList();
+  }, [])
   
   function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
+    // encrypt password with master key
+
+    // add password on backend
+
+
     const newArr = [...passwordList];
     newArr.push({
       site_favicon: site_favicon,
