@@ -332,8 +332,13 @@ function App() {
   }, [])
   
   function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
+    const masterKey = "1234";
+    const iv_array = new Uint32Array(16);
+    const iv = window.crypto.getRandomValues(iv_array);
     // encrypt password with master key
-
+    const pass_encrypted = await window.crypto.subtle.generateKey({
+      
+    })
     // add password on backend
 
 
