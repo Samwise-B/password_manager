@@ -4,7 +4,12 @@ export type PasswordListItem = {
     email: string;
     password: string;
     url: string;
-  }
+}
+
+export type EncryptedData = {
+    iv: Uint8Array,
+    ciphertext: Uint8Array
+}
 
 export interface passDetailProps {
     passList: Array<PasswordListItem>,
@@ -15,4 +20,8 @@ export interface IEditButtonProps {
     isEditing: boolean;
     handleEditPassword: () => void;
     updatePassword: () => void;
+}
+
+export type PasswordItem = {
+    newPassword: PasswordListItem | undefined
 }

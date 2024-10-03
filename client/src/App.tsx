@@ -1,10 +1,13 @@
-import { HTMLInputTypeAttribute, useEffect, useState } from 'react';
+import { HTMLInputTypeAttribute, useEffect, useState, createContext, useContext } from 'react';
 import './App.css'
 import Generator from './Generator'
 import { PassDetails, EditButton } from './PassDetails';
+import { deriveKey, encryptPassword, decryptPassword, base64ToUint8Array } from './utils/encryption';
 import {useForm, FormProvider, useFormContext, FieldError, FieldErrorsImpl} from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
 import Offcanvas from 'react-bootstrap/Offcanvas';
+import { useAddPassword } from './utils/addPassword';
+import { PasswordItem } from './types';
 
 
 interface navigationProps {
@@ -306,6 +309,13 @@ function OffCanvasWindow({renderCanvasContent, show, setShow} : OffCanvasProps) 
 
 function App() {
   const [passwordList, setPasswordList] = useState<Array<PasswordListItem>>([]);
+  const [newPassword, setNewPassword] = useState<PasswordListItem>({
+    site_favicon: "",
+    username: "",
+    email: "",
+    password: "",
+    url: ""
+  });
   const [filterString, setFilterString] = useState<string>("");
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [currentPassIndex, setCurrentPassIndex] = useState<number>(0);
@@ -314,34 +324,45 @@ function App() {
 
   useEffect(() => {
     const fetchPassList = async () => {
-      try {
-        const res = await fetch('http://localhost:3001/getPasswords');
-        if (!res.ok) {
-          throw new Error('HTTP error: Status ${res.status}')
+      fetch('http://localhost:3001/getPasswords').then(res => {
+        return res.json();
+      }).then(async passList => {
+        //console.log(passList);
+        const masterKey = "secretpassword";
+        for (let i=0; i < passList.length; i++) {
+          const encryptedData = {
+            iv: base64ToUint8Array(passList[i].iv),
+            ciphertext: base64ToUint8Array(passList[i].encrypted_password)
+          }
+          //console.log(encryptedData)
+          const password = await deriveKey(masterKey, passList[i].salt).then(key => {
+            //console.log("encryption key", key);
+            return decryptPassword(encryptedData, key);
+          });
+          passList[i]['password'] = password;
         }
-        let passList = await res.json();
-        console.log(passList);
+        //console.log(passList);
         setPasswordList(passList);
-      } catch (err) {
-        console.log(err);
-        setPasswordList([]);
-      }
+      }).catch(err => {
+        console.log("Error fetching password list: ",err);
+        setPasswordList([])
+      })
     };
 
     fetchPassList();
   }, [])
+
+  useAddPassword(newPassword);
   
   function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
-    const masterKey = "1234";
-    const iv_array = new Uint32Array(16);
-    const iv = window.crypto.getRandomValues(iv_array);
-    // encrypt password with master key
-    const pass_encrypted = await window.crypto.subtle.generateKey({
-      
-    })
     // add password on backend
-
-
+    setNewPassword({
+      site_favicon: site_favicon,
+      username: username,
+      email: email,
+      password: password,
+      url: url
+    });
     const newArr = [...passwordList];
     newArr.push({
       site_favicon: site_favicon,
@@ -351,6 +372,7 @@ function App() {
       url: url
     });
     setPasswordList(newArr);
+    
     setBodyContent("passbank");
   }
 
