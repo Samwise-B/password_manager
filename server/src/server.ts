@@ -53,7 +53,7 @@ app.post('/addPassword', async (req: Request, res: Response) => {
   } = req.body;
   console.log(req.body);
   try {
-    const insertPassword = "INSERT INTO user_passwords (username, email, url, encrypted_password, salt, iv) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *";
+    const insertPassword = "INSERT INTO user_passwords (username, email, url, encrypted_password, salt, iv) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;";
     const newPassQueryObj = await pool.query(insertPassword, [username, email, url, password, salt, iv]);
     const passwordList = await newPassQueryObj.rows[0];
 
@@ -77,7 +77,7 @@ app.post("/updatePassword", async (req: Request, res: Response) => {
 
   const updateQuery = `UPDATE user_passwords 
     SET username = $1, email = $2, encrypted_password = $3, url = $4, salt = $5, iv = $6
-    WHERE id = $7 RETURNING *`
+    WHERE id = $7 RETURNING *;`
 
   pool.query(updateQuery, [username, email, password, url, salt, iv, id]).then(updatedPasswords => {
     return res.json(updatedPasswords.rows[0]);
@@ -86,8 +86,19 @@ app.post("/updatePassword", async (req: Request, res: Response) => {
   })
 });
 
-app.get("/deletePassword", async (req: Request, res: Response) => {
-  return "TODO";
+app.post("/deletePassword", async (req: Request, res: Response) => {
+  const { id } = req.body;
+
+  const deleteQuery = `DELETE FROM user_passwords WHERE id = $1 RETURNING *;`
+
+  pool.query(deleteQuery, [id]).then(deletedPasswords => {
+    if (deletedPasswords) {
+      console.log('Deleted row:', deletedPasswords.rows[0]);
+      return res.json(deletedPasswords.rows[0]);
+    } else {
+      console.log('No row with that id');
+    }
+  })
 });
 
 app.listen(port, () => {

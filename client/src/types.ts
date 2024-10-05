@@ -17,7 +17,7 @@ export type EncryptedData = {
 export interface passDetailProps {
     passList: Array<PasswordListItem>,
     currentIndex: number,
-    updatePassList: ({ id, site_favicon, username, email, password, url, salt, iv }: PasswordListItem) => void,
+    updatePassList: ({ id, site_favicon, username, email, password, url, salt, iv }: PasswordListItem, operation: string) => void,
 }
 
 export interface IEditButtonProps {

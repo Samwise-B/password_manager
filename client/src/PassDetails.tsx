@@ -3,7 +3,7 @@ import Offcanvas from 'react-bootstrap/Offcanvas';
 import { useState } from 'react';
 import { useForm } from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
-import { useUpdatePassword } from './utils/addPassword';
+import { useDeletePassword, useUpdatePassword } from './utils/addPassword';
 
 export function PassDetails({passList, currentIndex, updatePassList} : passDetailProps) {
     const [passInputType, setPassInputType] = useState<string>("password");
@@ -35,6 +35,16 @@ export function PassDetails({passList, currentIndex, updatePassList} : passDetai
       console.log(passItem)
     }
 
+    async function deletePassword() {
+      const deletedPassword = await useDeletePassword(passItem.id);
+
+      if (deletedPassword) {
+        updatePassList({...passItem}, "delete");
+      } else {
+        console.log("error deleting password");
+      }
+    }
+
     const updatePassword = methods.handleSubmit(async data => {
       console.log("form data:", data);
       const updatedPassword = await useUpdatePassword({
@@ -46,7 +56,7 @@ export function PassDetails({passList, currentIndex, updatePassList} : passDetai
         url: data.url,
       });
       if (updatedPassword) {
-        updatePassList(updatedPassword);
+        updatePassList(updatedPassword, "update");
       } else {
         console.log("error updating password");
       }
@@ -179,7 +189,7 @@ export function PassDetails({passList, currentIndex, updatePassList} : passDetai
             </div>
             <div className='container d-flex justify-content-center'>
               <EditButton isEditing={isEditing} toggleEditPassword={toggleEditPassword} updatePassword={updatePassword}/>
-              <button type="button" className="btn btn-primary mx-1">Delete</button>
+              <button type="button" className="btn btn-primary mx-1" onClick={deletePassword}>Delete</button>
             </div>
           </form>
         </Offcanvas.Body>
@@ -196,7 +206,6 @@ export function EditButton({isEditing, toggleEditPassword, updatePassword}: IEdi
             <button type="button" className="btn btn-success mx-1" onClick={updatePassword}>Update</button>
             <button type="button" className='btn btn-danger mx-1' onClick={toggleEditPassword}>Cancel</button>
           </>
-          
         );
     }
 }

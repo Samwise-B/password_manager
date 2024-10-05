@@ -18,6 +18,10 @@ export interface IUpdatePassword {
     password: string;
 }
 
+export interface IDeletePassword {
+    id: number;
+}
+
 export async function useAddPassword({site_favicon, username, email, password, url}: IAddPassword) {
     console.log({site_favicon, username, email, password, url});
     const masterKey = "secretpassword";
@@ -97,6 +101,28 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
             console.log(result);
 
             return result;
+        }
+    } catch (err) {
+        console.log("error updating password:", err);
+    }
+};
+
+export async function useDeletePassword(id: number) {
+    console.log("deleting:", id);
+    try {
+        const res = await fetch("http://localhost:3001/deletePassword", {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({id: id})
+        });
+
+        if (res.ok) {
+            console.log("deleted password");
+            console.log(res);
+            return id;
         }
     } catch (err) {
         console.log("error updating password:", err);

@@ -363,24 +363,29 @@ function App() {
     setBodyContent("passbank");
   }
 
-  function UpdatePasswordList({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem) {
-    const newPassList = passwordList.map((passItem) => {
-      if (passItem.id == id) {
-          return {
-            id: id,
-            site_favicon: site_favicon,
-            username: username,
-            email: email,
-            password: password,
-            url: url,
-            salt: salt,
-            iv: iv
-          };
-      } else {
-        return passItem;
-      }
-  })
-  setPasswordList([...newPassList]);
+  function UpdatePasswordList({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem, operation: string) {
+    if (operation == "update") {
+      const newPassList = passwordList.map((passItem) => {
+        if (passItem.id == id) {
+            return {
+              id: id,
+              site_favicon: site_favicon,
+              username: username,
+              email: email,
+              password: password,
+              url: url,
+              salt: salt,
+              iv: iv
+            };
+        } else {
+          return passItem;
+        }
+      })
+      setPasswordList([...newPassList]);
+    } else if (operation == "delete") {
+      const newPassList = passwordList.filter(passItem => passItem.id !== id);
+      setPasswordList([...newPassList])
+    }
   }
 
   function onPassItemClick(index: number) {
