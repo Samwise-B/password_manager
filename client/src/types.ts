@@ -22,7 +22,7 @@ export interface passDetailProps {
 
 export interface IEditButtonProps {
     isEditing: boolean;
-    handleEditPassword: () => void;
+    toggleEditPassword: () => void;
     updatePassword: () => void;
 }
 

@@ -1,9 +1,8 @@
 import {passDetailProps, IEditButtonProps, PasswordListItem} from './types';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import { useState } from 'react';
-import {useForm, FormProvider} from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
-import { Input } from './App';
 import { useUpdatePassword } from './utils/addPassword';
 
 export function PassDetails({passList, currentIndex, updatePassList} : passDetailProps) {
@@ -22,8 +21,8 @@ export function PassDetails({passList, currentIndex, updatePassList} : passDetai
       }
     }
   
-    function handleEditPassword() {
-      setIsEditing(true);
+    function toggleEditPassword() {
+      setIsEditing(!isEditing);
       handleShowPassword();
     }
   
@@ -60,37 +59,6 @@ export function PassDetails({passList, currentIndex, updatePassList} : passDetai
           <Offcanvas.Title className='container d-flex justify-content-center'>Password Details</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
-          {/* <div className="container">
-            <div className="container mb-3">
-              <label htmlFor="email" className="form-label">Email address</label>
-              <input type="email" className="form-control" id="email" 
-                value={passItem.email} 
-                readOnly={!isEditing} 
-                onChange={handleChange}></input>
-            </div>
-            <div className="container mb-3">
-              <label htmlFor="username" className="form-label">Username</label>
-              <input type="text" className="form-control" id="username" 
-              value={passItem.username} 
-              readOnly={!isEditing} 
-              onChange={handleChange}></input>
-            </div>
-            <label htmlFor="password" className="form-label">Password</label>
-            <div className="container input-group mb-3">
-              <input type={passInputType} id="password" className="form-control" aria-describedby="passwordHelpBlock" 
-              value={passItem.password}  
-              readOnly={!isEditing}
-              onChange={handleChange}></input>
-              <button type="button" className="btn btn-primary" onClick={handleShowPassword}>Show</button>
-            </div>
-            <div className="container mb-3">
-              <label htmlFor="url" className="form-label">Website</label>
-              <input type="url" className="form-control" id="url" 
-              value={passItem.url} 
-              readOnly={!isEditing}
-              onChange={handleChange}></input>
-            </div>
-          </div> */}
           <form onSubmit={e => e.preventDefault()} className="container" noValidate>
             <input type="hidden" name="id" value={passItem.id}></input>
             <div className="container mb-3">
@@ -98,6 +66,7 @@ export function PassDetails({passList, currentIndex, updatePassList} : passDetai
               <input type="email" className="form-control" id="email" 
                 value={passItem.email} 
                 readOnly={!isEditing}
+                disabled={!isEditing}
                 {...methods.register("email", {
                   onChange: handleChange,
                   required: {
@@ -124,7 +93,8 @@ export function PassDetails({passList, currentIndex, updatePassList} : passDetai
               <label htmlFor="username" className="form-label">Username</label>
               <input type="text" className="form-control" id="username" 
               value={passItem.username} 
-              readOnly={!isEditing} 
+              readOnly={!isEditing}
+              disabled={!isEditing} 
               {...methods.register("username", {
                 onChange: handleChange,
                 required: {
@@ -152,7 +122,8 @@ export function PassDetails({passList, currentIndex, updatePassList} : passDetai
               <div className="container-fluid input-group mb-3 px-0">
                 <input type={passInputType} className="form-control" id="password" 
                 value={passItem.password} 
-                readOnly={!isEditing} 
+                readOnly={!isEditing}
+                disabled={!isEditing} 
                 {...methods.register("password", {
                   onChange: handleChange,
                   required: {
@@ -183,6 +154,7 @@ export function PassDetails({passList, currentIndex, updatePassList} : passDetai
               <input type="text" className="form-control" id="url" 
               value={passItem.url} 
               readOnly={!isEditing} 
+              disabled={!isEditing}
               {...methods.register("url", {
                 onChange: handleChange,
                 required: {
@@ -206,8 +178,8 @@ export function PassDetails({passList, currentIndex, updatePassList} : passDetai
               />
             </div>
             <div className='container d-flex justify-content-center'>
-              <EditButton isEditing={isEditing} handleEditPassword={handleEditPassword} updatePassword={updatePassword}/>
-              <button type="button" className="btn btn-primary mx-3">Delete</button>
+              <EditButton isEditing={isEditing} toggleEditPassword={toggleEditPassword} updatePassword={updatePassword}/>
+              <button type="button" className="btn btn-primary mx-1">Delete</button>
             </div>
           </form>
         </Offcanvas.Body>
@@ -215,10 +187,16 @@ export function PassDetails({passList, currentIndex, updatePassList} : passDetai
     )
 }
 
-export function EditButton({isEditing, handleEditPassword, updatePassword}: IEditButtonProps) {
+export function EditButton({isEditing, toggleEditPassword, updatePassword}: IEditButtonProps) {
     if (!isEditing) {
-        return <button type="button" className="btn btn-primary mx-3" onClick={handleEditPassword}>Edit</button>;
+        return <button type="button" className="btn btn-primary mx-1" onClick={toggleEditPassword}>Edit</button>;
     } else {
-        return <button type="button" className="btn btn-primary mx-3" onClick={updatePassword}>Done</button>;
+        return (
+          <>
+            <button type="button" className="btn btn-success mx-1" onClick={updatePassword}>Update</button>
+            <button type="button" className='btn btn-danger mx-1' onClick={toggleEditPassword}>Cancel</button>
+          </>
+          
+        );
     }
 }
