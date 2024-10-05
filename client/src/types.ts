@@ -4,7 +4,6 @@ export type PasswordListItem = {
     username: string;
     email: string;
     url: string;
-    encrypted_password: string;
     password: string;
     salt: string;
     iv: string;
@@ -17,7 +16,8 @@ export type EncryptedData = {
 
 export interface passDetailProps {
     passList: Array<PasswordListItem>,
-    currentIndex: number
+    currentIndex: number,
+    updatePassList: ({ id, site_favicon, username, email, password, url, salt, iv }: PasswordListItem) => void,
 }
 
 export interface IEditButtonProps {

@@ -59,11 +59,11 @@ app.post('/addPassword', async (req: Request, res: Response) => {
 
     return res.json(passwordList); 
   } catch (err) {
-    throw err;
+    throw err; 
   }
 })
  
-app.get("/updatePassword", async (req: Request, res: Response) => {
+app.post("/updatePassword", async (req: Request, res: Response) => {
   const {
     username,
     email,
@@ -76,11 +76,11 @@ app.get("/updatePassword", async (req: Request, res: Response) => {
   console.log(req.body);
 
   const updateQuery = `UPDATE user_passwords 
-    SET (username = $1, email = $2, encrypted_password = $3, url = $4, salt = $5, iv = $6) 
+    SET username = $1, email = $2, encrypted_password = $3, url = $4, salt = $5, iv = $6
     WHERE id = $7 RETURNING *`
 
   pool.query(updateQuery, [username, email, password, url, salt, iv, id]).then(updatedPasswords => {
-    return res.json(updatedPasswords);
+    return res.json(updatedPasswords.rows[0]);
   }).catch(err => {
     throw err;
   })

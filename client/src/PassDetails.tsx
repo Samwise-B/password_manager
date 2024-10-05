@@ -4,9 +4,9 @@ import { useState } from 'react';
 import {useForm, FormProvider} from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
 import { Input } from './App';
-//import { useUpdatePassword } from './utils/addPassword';
+import { useUpdatePassword } from './utils/addPassword';
 
-export function PassDetails({passList, currentIndex} : passDetailProps) {
+export function PassDetails({passList, currentIndex, updatePassList} : passDetailProps) {
     const [passInputType, setPassInputType] = useState<string>("password");
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [passItem, setPassItem] = useState<PasswordListItem>(passList[currentIndex]);
@@ -37,18 +37,20 @@ export function PassDetails({passList, currentIndex} : passDetailProps) {
     }
 
     const updatePassword = methods.handleSubmit(async data => {
-      console.log(data);
-      // await useUpdatePassword({
-      //   id: data.id,
-      //   site_favicon: "/vite.svg",
-      //   username: data.username,
-      //   email: data.email,
-      //   password: data.password,
-      //   encrypted_password: "",
-      //   url: data.url,
-      //   iv: "",
-      //   salt: "",
-      // });
+      console.log("form data:", data);
+      const updatedPassword = await useUpdatePassword({
+        id: passItem.id,
+        site_favicon: "/vite.svg",
+        username: data.username,
+        email: data.email,
+        password: data.password,
+        url: data.url,
+      });
+      if (updatedPassword) {
+        updatePassList(updatedPassword);
+      } else {
+        console.log("error updating password");
+      }
       setIsEditing(false);
     })
   

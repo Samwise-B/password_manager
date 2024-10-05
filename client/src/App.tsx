@@ -346,7 +346,7 @@ function App() {
     fetchPassList();
   }, [])
   
-  function updatePasswordList({id, site_favicon, username, email, password, encrypted_password, url, salt, iv}: PasswordListItem) {
+  function AddToPasswordList({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem) {
     // add password on backend
     const newArr = [...passwordList];
     newArr.push({
@@ -355,13 +355,32 @@ function App() {
       username: username,
       email: email,
       password: password,
-      encrypted_password: encrypted_password,
       url: url,
       salt: salt,
       iv: iv
     });
     setPasswordList(newArr);
     setBodyContent("passbank");
+  }
+
+  function UpdatePasswordList({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem) {
+    const newPassList = passwordList.map((passItem) => {
+      if (passItem.id == id) {
+          return {
+            id: id,
+            site_favicon: site_favicon,
+            username: username,
+            email: email,
+            password: password,
+            url: url,
+            salt: salt,
+            iv: iv
+          };
+      } else {
+        return passItem;
+      }
+  })
+  setPasswordList([...newPassList]);
   }
 
   function onPassItemClick(index: number) {
@@ -388,10 +407,11 @@ function App() {
       return (
         <PassDetails 
         passList={passwordList} 
-        currentIndex={currentPassIndex}/>
+        currentIndex={currentPassIndex}
+        updatePassList={UpdatePasswordList}/>
       )
     } else if (canvasContent == "add_pass") {
-      return <PasswordCreator updatePasswordList={updatePasswordList}/>
+      return <PasswordCreator updatePasswordList={AddToPasswordList}/>
     }
   }
 
