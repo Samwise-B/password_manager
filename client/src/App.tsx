@@ -7,7 +7,7 @@ import {useForm, FormProvider, useFormContext, FieldError, FieldErrorsImpl} from
 import { ErrorMessage } from "@hookform/error-message";
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import { useAddPassword } from './utils/addPassword';
-import { PasswordItem } from './types';
+import { PasswordItem, PasswordListItem } from './types';
 
 
 interface navigationProps {
@@ -46,14 +46,10 @@ interface passBankProps {
   onPassItemClick: (index: number) => void;
 }
 
-
-
 interface passBankItemProps {
+  key: number;
   index: number;
-  site_favicon: string;
-  username: string;
-  email: string;
-  url: string;
+  passItem: PasswordListItem;
   onPassItemClick: (index: number) => void;
 }
 
@@ -67,13 +63,14 @@ interface ISearchBarProps {
   filterPL: (substring: string) => void;
 }
 
-type PasswordListItem = {
-  site_favicon: string;
-  username: string;
-  email: string;
-  password: string;
-  url: string;
-}
+// type PasswordListItem = {
+//   id: number;
+//   site_favicon: string;
+//   username: string;
+//   email: string;
+//   password: string;
+//   url: string;
+// }
 
 function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigationProps) {
   return (
@@ -112,7 +109,7 @@ function Search({filterPL}: ISearchBarProps) {
   )
 }
 
-function PassBankItem({index, site_favicon, url, email, username, onPassItemClick}: passBankItemProps) {
+function PassBankItem({passItem, index, onPassItemClick}: passBankItemProps) {
 
   function handleClick() {
     onPassItemClick(index);
@@ -122,14 +119,14 @@ function PassBankItem({index, site_favicon, url, email, username, onPassItemClic
     <button type="button" className="list-group-item list-group-item-action rounded-0" onClick={handleClick} data-bs-toggle="offcanvas" data-bs-target="#offCanvasWindow" aria-current="true">
       <div className="row">
         <div className="col-sm-1 fw-bold">
-          <img src={site_favicon} alt="" className="rounded"></img>
+          <img src={passItem.site_favicon} alt="" className="rounded"></img>
         </div>
         <div className='col-sm-11'>
           <div className='row mx-auto justify-content-center'>
-            {url}
+            {passItem.url}
           </div>
           <div className='row justify-content-center'>
-            {email}
+            {passItem.email}
           </div>
         </div>
       </div>
@@ -138,8 +135,6 @@ function PassBankItem({index, site_favicon, url, email, username, onPassItemClic
 }
 
 function PassBank({passwordList, onPassItemClick, filterString}: passBankProps) {
-
-  
   function filterPasswordList(substring: string) {
     let newFilteredPL: Array<PasswordListItem> = [];
 
@@ -164,7 +159,7 @@ function PassBank({passwordList, onPassItemClick, filterString}: passBankProps) 
   }
 
   const passBankItems: React.ReactNode = filterPasswordList(filterString).map((passItem, index) =>
-    <PassBankItem index={index} site_favicon='/vite.svg' email={passItem.email} username={passItem.username} url={passItem.url} onPassItemClick={onPassItemClick}/>
+    <PassBankItem passItem={passItem} key={passItem.id} index={index} onPassItemClick={onPassItemClick}/>
   );
 
   return (
@@ -176,7 +171,7 @@ function PassBank({passwordList, onPassItemClick, filterString}: passBankProps) 
   )
 }
 
-function Input({ label, type, id, placeholder, pattern, errorMessage }: IInputProps) {
+export function Input({ label, type, id, placeholder, pattern, errorMessage }: IInputProps) {
   const { register, formState: {errors} } = useFormContext();
 
   return (
@@ -210,14 +205,20 @@ function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
     criteriaMode: "all"
   });
 
-  const onSubmit = methods.handleSubmit(data => {
+  const onSubmit = methods.handleSubmit(async data => {
     console.log(data);
     const site_favicon = "/vite.svg"
     const username = data.username;
     const email = data.email;
     const password = data.password;
     const url = data.url
-    updatePasswordList({site_favicon, username, email, password, url});
+    const newPassword = await useAddPassword({site_favicon, username, email, password, url})
+    if (newPassword) {
+      updatePasswordList(newPassword);
+    } else {
+      alert("password not added");
+    }
+    
   })
 
   return (
@@ -309,13 +310,6 @@ function OffCanvasWindow({renderCanvasContent, show, setShow} : OffCanvasProps) 
 
 function App() {
   const [passwordList, setPasswordList] = useState<Array<PasswordListItem>>([]);
-  const [newPassword, setNewPassword] = useState<PasswordListItem>({
-    site_favicon: "",
-    username: "",
-    email: "",
-    password: "",
-    url: ""
-  });
   const [filterString, setFilterString] = useState<string>("");
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [currentPassIndex, setCurrentPassIndex] = useState<number>(0);
@@ -351,28 +345,22 @@ function App() {
 
     fetchPassList();
   }, [])
-
-  useAddPassword(newPassword);
   
-  function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
+  function updatePasswordList({id, site_favicon, username, email, password, encrypted_password, url, salt, iv}: PasswordListItem) {
     // add password on backend
-    setNewPassword({
-      site_favicon: site_favicon,
-      username: username,
-      email: email,
-      password: password,
-      url: url
-    });
     const newArr = [...passwordList];
     newArr.push({
+      id: id,
       site_favicon: site_favicon,
       username: username,
       email: email,
       password: password,
-      url: url
+      encrypted_password: encrypted_password,
+      url: url,
+      salt: salt,
+      iv: iv
     });
     setPasswordList(newArr);
-    
     setBodyContent("passbank");
   }
 

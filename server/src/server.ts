@@ -54,7 +54,8 @@ app.post('/addPassword', async (req: Request, res: Response) => {
   console.log(req.body);
   try {
     const insertPassword = "INSERT INTO user_passwords (username, email, url, encrypted_password, salt, iv) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *";
-    const passwordList = await pool.query(insertPassword, [username, email, url, password, salt, iv]);
+    const newPassQueryObj = await pool.query(insertPassword, [username, email, url, password, salt, iv]);
+    const passwordList = await newPassQueryObj.rows[0];
 
     return res.json(passwordList); 
   } catch (err) {
@@ -63,7 +64,26 @@ app.post('/addPassword', async (req: Request, res: Response) => {
 })
  
 app.get("/updatePassword", async (req: Request, res: Response) => {
-  return "TODO";
+  const {
+    username,
+    email,
+    password,
+    url,
+    salt,
+    iv,
+    id
+  } = req.body;
+  console.log(req.body);
+
+  const updateQuery = `UPDATE user_passwords 
+    SET (username = $1, email = $2, encrypted_password = $3, url = $4, salt = $5, iv = $6) 
+    WHERE id = $7 RETURNING *`
+
+  pool.query(updateQuery, [username, email, password, url, salt, iv, id]).then(updatedPasswords => {
+    return res.json(updatedPasswords);
+  }).catch(err => {
+    throw err;
+  })
 });
 
 app.get("/deletePassword", async (req: Request, res: Response) => {

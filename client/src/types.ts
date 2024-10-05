@@ -1,9 +1,13 @@
 export type PasswordListItem = {
+    id: number;
     site_favicon: string;
     username: string;
     email: string;
-    password: string;
     url: string;
+    encrypted_password: string;
+    password: string;
+    salt: string;
+    iv: string;
 }
 
 export type EncryptedData = {
