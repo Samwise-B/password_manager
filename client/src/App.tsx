@@ -1,11 +1,14 @@
-import { HTMLInputTypeAttribute, useEffect, useState } from 'react';
+import { HTMLInputTypeAttribute, useEffect, useState, createContext, useContext } from 'react';
 import './App.css'
 import Generator from './Generator'
+import { PassDetails, EditButton } from './PassDetails';
+import { deriveKey, encryptPassword, decryptPassword, base64ToUint8Array } from './utils/encryption';
 import {useForm, FormProvider, useFormContext, FieldError, FieldErrorsImpl} from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
 import Offcanvas from 'react-bootstrap/Offcanvas';
-import Button from 'react-bootstrap/Button';
-import { OffcanvasHeader } from 'react-bootstrap';
+import { useAddPassword } from './utils/addPassword';
+import { PasswordItem } from './types';
+
 
 interface navigationProps {
   onGeneratorClick: () => void,
@@ -39,13 +42,11 @@ interface passwordCreatorProps {
 
 interface passBankProps {
   passwordList: Array<PasswordListItem>;
+  filterString: string;
   onPassItemClick: (index: number) => void;
 }
 
-interface passDetailProps {
-  passList: Array<PasswordListItem>,
-  currentIndex: number
-}
+
 
 interface passBankItemProps {
   index: number;
@@ -60,6 +61,10 @@ interface OffCanvasProps {
   renderCanvasContent: () => React.ReactNode;
   show: boolean;
   setShow: (val: boolean) => void;
+}
+
+interface ISearchBarProps {
+  filterPL: (substring: string) => void;
 }
 
 type PasswordListItem = {
@@ -86,10 +91,24 @@ function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigat
           <button type="button" className="btn btn-outline-primary mx-2 align-items-center" onClick={onNewPasswordClick} data-bs-toggle="offcanvas" data-bs-target="#offCanvasWindow">New</button>
         </div>
       </div>
-      <div className='input-group mb-3'>
-        <input className="form-control" type="text" id="generatedPassword" placeholder='Search'></input>    
-      </div>
+      
     </header>
+  )
+}
+
+function Search({filterPL}: ISearchBarProps) {
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const searchString = e.target.value.toLowerCase();
+    filterPL(searchString);
+  }
+
+  return (
+    <>
+      <div className='container-fluid input-group mb-3'>
+        <input className="form-control" type="text" id="generatedPassword" placeholder='Search' onChange={handleChange}></input>    
+      </div>
+    </>
   )
 }
 
@@ -118,8 +137,33 @@ function PassBankItem({index, site_favicon, url, email, username, onPassItemClic
 )
 }
 
-function PassBank({passwordList, onPassItemClick}: passBankProps) {
-  const passBankItems: React.ReactNode = passwordList.map((passItem, index) => 
+function PassBank({passwordList, onPassItemClick, filterString}: passBankProps) {
+
+  
+  function filterPasswordList(substring: string) {
+    let newFilteredPL: Array<PasswordListItem> = [];
+
+    if (substring == "") {
+      return passwordList;
+    } else {
+      for (let passItem of passwordList) {
+        let email = passItem.email.toLowerCase();
+        let username = passItem.username.toLowerCase();
+        let url = passItem.url.toLowerCase();
+  
+        if (email.includes(substring)
+          || username.includes(substring)
+          || url.includes(substring)) 
+        {
+          newFilteredPL.push(passItem);
+        }
+      }
+      console.log(newFilteredPL);
+      return newFilteredPL;
+    }
+  }
+
+  const passBankItems: React.ReactNode = filterPasswordList(filterString).map((passItem, index) =>
     <PassBankItem index={index} site_favicon='/vite.svg' email={passItem.email} username={passItem.username} url={passItem.url} onPassItemClick={onPassItemClick}/>
   );
 
@@ -129,53 +173,6 @@ function PassBank({passwordList, onPassItemClick}: passBankProps) {
         {passBankItems}
       </div>
     </div>
-  )
-}
-
-function PassDetails({passList, currentIndex} : passDetailProps) {
-  const [passInputType, setPassInputType] = useState<string>("password");
-  const passItem = passList[currentIndex];
-  console.log(passItem);
-
-  function handleShowPassword() {
-    if (passInputType == "password") {
-      setPassInputType("text");
-    } else {
-      setPassInputType("password");
-    }
-  }
-
-  return (
-    <>
-      {/* <div className="offcanvas-header">
-        <button type="button" className="btn btn-outline-secondary">Edit</button>
-        <button type="button" className="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div> */}
-      <Offcanvas.Header closeButton>
-        <Offcanvas.Title className='container'>Password Details</Offcanvas.Title>
-      </Offcanvas.Header>
-      <Offcanvas.Body>
-        <div className="container">
-          <div className="container mb-3">
-            <label htmlFor="emailInput" className="form-label">Email address</label>
-            <input type="email" className="form-control" id="emailInput" value={passItem.email}></input>
-          </div>
-          <div className="container mb-3">
-            <label htmlFor="usernameInput" className="form-label">Username</label>
-            <input type="text" className="form-control" id="emailInput" value={passItem.username}></input>
-          </div>
-          <label htmlFor="inputPassword5" className="form-label">Password</label>
-          <div className="container input-group mb-3">
-            <input type={passInputType} id="inputPassword5" className="form-control" value={passItem.password} aria-describedby="passwordHelpBlock"></input>
-            <button type="button" className="btn btn-primary" onClick={handleShowPassword}>Show</button>
-          </div>
-          <div className="container mb-3">
-            <label htmlFor="urlInput" className="form-label">Website</label>
-            <input type="url" className="form-control" id="urlInput" value={passItem.url}></input>
-          </div>
-        </div>
-      </Offcanvas.Body>
-    </>
   )
 }
 
@@ -266,29 +263,6 @@ function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
 }
 
 function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
-  function addNewPassword(event: React.FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
-    const form = event.target as HTMLFormElement;
-
-    if (!form.checkValidity()) {
-      event.stopPropagation();
-    }
-    console.log("test");
-    const target = event.target as typeof event.target & {
-      email: {value: string};
-      password: {value: string};
-      url: {value: string};
-      username: {value:string};
-    }
-    const site_favicon = "/vite.svg"
-    const username = target.username.value;
-    const email = target.email.value;
-    const password = target.password.value;
-    const url = target.url.value;
-    console.log(email, password, url)
-    updatePasswordList({site_favicon, username, email, password, url});
-  }
-
   return (
     <>
       <Offcanvas.Header closeButton>
@@ -334,25 +308,61 @@ function OffCanvasWindow({renderCanvasContent, show, setShow} : OffCanvasProps) 
 }
 
 function App() {
-  const [passwordList, setPasswordList] = useState<Array<PasswordListItem>>([
-    {
-      site_favicon: "/vite.svg",
-      username: "placeholder",
-      email: "placeholder@gmail.com",
-      password: "test123",
-      url: "https://www.google.com"
-    }
-  ]);
+  const [passwordList, setPasswordList] = useState<Array<PasswordListItem>>([]);
+  const [newPassword, setNewPassword] = useState<PasswordListItem>({
+    site_favicon: "",
+    username: "",
+    email: "",
+    password: "",
+    url: ""
+  });
+  const [filterString, setFilterString] = useState<string>("");
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [currentPassIndex, setCurrentPassIndex] = useState<number>(0);
   const [canvasContent, setCanvasContent] = useState<string>("details");
-  const [bodyContent, setBodyContent] = useState<React.ReactNode>(
-    <PassBank 
-      onPassItemClick={onPassItemClick}
-      passwordList={passwordList}/>);
-  
+  const [bodyContent, setBodyContent] = useState<string>("passbank");
 
+  useEffect(() => {
+    const fetchPassList = async () => {
+      fetch('http://localhost:3001/getPasswords').then(res => {
+        return res.json();
+      }).then(async passList => {
+        //console.log(passList);
+        const masterKey = "secretpassword";
+        for (let i=0; i < passList.length; i++) {
+          const encryptedData = {
+            iv: base64ToUint8Array(passList[i].iv),
+            ciphertext: base64ToUint8Array(passList[i].encrypted_password)
+          }
+          //console.log(encryptedData)
+          const password = await deriveKey(masterKey, passList[i].salt).then(key => {
+            //console.log("encryption key", key);
+            return decryptPassword(encryptedData, key);
+          });
+          passList[i]['password'] = password;
+        }
+        //console.log(passList);
+        setPasswordList(passList);
+      }).catch(err => {
+        console.log("Error fetching password list: ",err);
+        setPasswordList([])
+      })
+    };
+
+    fetchPassList();
+  }, [])
+
+  useAddPassword(newPassword);
+  
   function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
+    // add password on backend
+    setNewPassword({
+      site_favicon: site_favicon,
+      username: username,
+      email: email,
+      password: password,
+      url: url
+    });
     const newArr = [...passwordList];
     newArr.push({
       site_favicon: site_favicon,
@@ -362,7 +372,8 @@ function App() {
       url: url
     });
     setPasswordList(newArr);
-    setBodyContent(<PassBank onPassItemClick={onPassItemClick} passwordList={newArr}/>);
+    
+    setBodyContent("passbank");
   }
 
   function onPassItemClick(index: number) {
@@ -372,13 +383,11 @@ function App() {
   }
 
   function onGeneratorClick() {
-    setBodyContent(<Generator readonlyPassword={true}/>);
+    setBodyContent("generator");
   }
 
   function onBankClick() {
-    setBodyContent(<PassBank 
-      onPassItemClick={onPassItemClick}  
-      passwordList={passwordList}/>);
+    setBodyContent("passbank");
   }
 
   function onNewPasswordClick() {
@@ -398,11 +407,29 @@ function App() {
     }
   }
 
+  function renderBody() {
+    if (bodyContent == "passbank") {
+      return (
+        <>
+          <Search filterPL={setFilterString}/>
+          <PassBank 
+          onPassItemClick={onPassItemClick}
+          filterString={filterString}
+          passwordList={passwordList}/>
+        </>
+      );
+    } else if (bodyContent == "generator") {
+      return (
+        <Generator readonlyPassword={true}/>
+      )
+    }
+  }
+
   return (
     <>
       <div className='App'>
         <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
-        {bodyContent}
+        {renderBody()}
         <OffCanvasWindow renderCanvasContent={renderCanvasContent} show={showOffcanvas} setShow={setShowOffcanvas}/>
       </div>
     </>
