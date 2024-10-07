@@ -3,11 +3,12 @@ import { PasswordListItem } from "../types";
 import { deriveKey, encryptPassword, arrayBufferToBase64 } from "./encryption";
 
 export interface IAddPassword {
-    site_favicon: string;
-    username: string;
-    email: string;
-    url: string;
-    password: string;
+    site_favicon: string,
+    username: string,
+    email: string,
+    url: string,
+    password: string,
+    handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void,
 }
 export interface IUpdatePassword {
     id: number;
@@ -16,10 +17,12 @@ export interface IUpdatePassword {
     email: string;
     url: string;
     password: string;
+    handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
 }
 
 export interface IDeletePassword {
     id: number;
+    handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
 }
 
 export async function useAddPassword({site_favicon, username, email, password, url}: IAddPassword) {
@@ -57,11 +60,13 @@ export async function useAddPassword({site_favicon, username, email, password, u
             return result
         }
         else {
-            console.log("failed to add password")
-            return false;
+            throw new Error(`${res.status}: Request to add password failed.`);
         }
     } catch (err) {
-        console.log("error:", err)
+        throw new Error(`
+            Request to add password failed.
+            ${err} 
+            `);
     }
 }
 
@@ -101,9 +106,14 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
             console.log(result);
 
             return result;
+        } else {
+            throw new Error(`${res.status}: Request to update password failed.`);
         }
     } catch (err) {
-        console.log("error updating password:", err);
+        throw new Error(`
+            Request to update password failed.
+            ${err} 
+            `);
     }
 };
 
@@ -123,8 +133,13 @@ export async function useDeletePassword(id: number) {
             console.log("deleted password");
             console.log(res);
             return id;
+        } else {
+            throw new Error(`${res.status}: Request to delete password failed.`);
         }
     } catch (err) {
-        console.log("error updating password:", err);
+        throw new Error(`
+            Request to add password failed.
+            ${err} 
+            `);
     }
 };
