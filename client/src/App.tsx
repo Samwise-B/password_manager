@@ -10,6 +10,7 @@ import { useAddPassword } from './utils/addPassword';
 import { PasswordItem, PasswordListItem } from './types';
 import { AuthProvider, useAuth } from "./AuthProvider";
 import { Login } from './Login';
+import { ErrorPage } from './ErrorPage';
 
 
 interface navigationProps {
@@ -39,26 +40,34 @@ interface IErrorProps {
 }
 
 interface passwordCreatorProps {
-  updatePasswordList: ({site_favicon, username, email, password, url}: PasswordListItem) => void;
+  updatePasswordList: ({site_favicon, username, email, password, url}: PasswordListItem) => void,
+  handleClose: () => void,
+  handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void,
 }
 
 interface passBankProps {
-  passwordList: Array<PasswordListItem>;
-  filterString: string;
-  onPassItemClick: (index: number) => void;
+  passwordList: Array<PasswordListItem>,
+  filterString: string,
+  onPassItemClick: (index: number) => void,
 }
 
 interface passBankItemProps {
-  key: number;
-  index: number;
-  passItem: PasswordListItem;
-  onPassItemClick: (index: number) => void;
+  key: number,
+  index: number,
+  passItem: PasswordListItem,
+  onPassItemClick: (index: number) => void,
 }
 
 interface OffCanvasProps {
-  renderCanvasContent: () => React.ReactNode;
+  //renderCanvasContent: () => React.ReactNode;
   show: boolean;
   setShow: (val: boolean) => void;
+  canvasContent: string; 
+  passList: Array<PasswordListItem>; 
+  currentIndex: number; 
+  UpdatePassList: ({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem, operation: string) => void; 
+  AddToPassList: ({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem) => void;
+  handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void;
 }
 
 interface ISearchBarProps {
@@ -195,7 +204,7 @@ export function Input({ label, type, id, placeholder, pattern, errorMessage }: I
   );
 }
 
-function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
+function NewPasswordForm({updatePasswordList, handleClose, handleError}: passwordCreatorProps) {
   const methods = useForm({
     criteriaMode: "all"
   });
@@ -207,9 +216,10 @@ function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
     const email = data.email;
     const password = data.password;
     const url = data.url
-    const newPassword = await useAddPassword({site_favicon, username, email, password, url})
+    const newPassword = await useAddPassword({site_favicon, username, email, password, url, handleError})
     if (newPassword) {
       updatePasswordList(newPassword);
+      handleClose();
     } else {
       alert("password not added");
     }
@@ -258,14 +268,14 @@ function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
   );
 }
 
-function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
+function PasswordCreator({updatePasswordList, handleClose, handleError }: passwordCreatorProps) {
   return (
     <>
       <Offcanvas.Header closeButton>
         <Offcanvas.Title>New Password</Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
-        <NewPasswordForm updatePasswordList={updatePasswordList}/>
+        <NewPasswordForm handleClose={handleClose} updatePasswordList={updatePasswordList} handleError={handleError}/>
         {/* <form onSubmit={addNewPassword} className="needs-validation" noValidate={true}>
           <div className="container mb-3">
             <label htmlFor="emailInput" className="form-label">Email address</label>
@@ -290,12 +300,29 @@ function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
   )
 }
 
-function OffCanvasWindow({renderCanvasContent, show, setShow} : OffCanvasProps) {
+function OffCanvasWindow({canvasContent, passList, currentIndex, UpdatePassList, AddToPassList, show, setShow, handleError} : OffCanvasProps) {
 
   const handleClose = () => {
     console.log("handle close");
     setShow(false);
   }
+
+  function renderCanvasContent() {
+    if (canvasContent == "details") {
+      return (
+        <PassDetails 
+        passList={passList} 
+        currentIndex={currentIndex}
+        updatePassList={UpdatePassList}
+        handleClose={handleClose}
+        handleError={handleError}
+        />
+      )
+    } else if (canvasContent == "add_pass") {
+      return <PasswordCreator updatePasswordList={AddToPassList} handleClose={handleClose} handleError={handleError}/>
+    }
+  }
+
   return (
     <Offcanvas show={show} onHide={handleClose} id="offCanvasWindow" placement='end' className='w-75 bg-dark text-light'>
       {renderCanvasContent()}
@@ -311,6 +338,9 @@ function App() {
   const [canvasContent, setCanvasContent] = useState<string>("details");
   const [bodyContent, setBodyContent] = useState<string>("passbank");
   const user = useAuth();
+  const [errorCode, setErrorCode] = useState<string>("");
+  const [errorMessageShort, setErrorMessageShort] = useState<string>("");
+  const [errorMessageFull, setErrorMessageFull] = useState<string>("");
 
   useEffect(() => {
     const fetchPassList = async () => {
@@ -341,6 +371,13 @@ function App() {
 
     fetchPassList();
   }, [])
+
+  function handleError(errorCode: string, errorMessageShort:string, errorMessageFull:string) {
+    setErrorCode(errorCode);
+    setErrorMessageShort(errorMessageShort);
+    setErrorMessageFull(errorMessageFull);
+    setBodyContent("error")
+  }
   
   function AddToPasswordList({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem) {
     // add password on backend
@@ -403,19 +440,6 @@ function App() {
     setCanvasContent("add_pass");
   }
 
-  function renderCanvasContent() {
-    if (canvasContent == "details") {
-      return (
-        <PassDetails 
-        passList={passwordList} 
-        currentIndex={currentPassIndex}
-        updatePassList={UpdatePasswordList}/>
-      )
-    } else if (canvasContent == "add_pass") {
-      return <PasswordCreator updatePasswordList={AddToPasswordList}/>
-    }
-  }
-
   function renderBody() {
     if (!user.token) {
       return <Login/>
@@ -429,7 +453,16 @@ function App() {
           onPassItemClick={onPassItemClick}
           filterString={filterString}
           passwordList={passwordList}/>
-          <OffCanvasWindow renderCanvasContent={renderCanvasContent} show={showOffcanvas} setShow={setShowOffcanvas}/>
+          <OffCanvasWindow
+            canvasContent={canvasContent} 
+            passList={passwordList} 
+            currentIndex={currentPassIndex} 
+            show={showOffcanvas} 
+            setShow={setShowOffcanvas}
+            AddToPassList={AddToPasswordList}
+            UpdatePassList={UpdatePasswordList}
+            handleError={handleError}
+          />
         </>
       );
     } 
@@ -438,8 +471,24 @@ function App() {
         <>
           <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
           <Generator readonlyPassword={true}/>
-          <OffCanvasWindow renderCanvasContent={renderCanvasContent} show={showOffcanvas} setShow={setShowOffcanvas}/>
+          <OffCanvasWindow 
+            canvasContent={canvasContent} 
+            passList={passwordList} 
+            currentIndex={currentPassIndex} 
+            show={showOffcanvas} 
+            setShow={setShowOffcanvas}
+            AddToPassList={AddToPasswordList}
+            UpdatePassList={UpdatePasswordList}
+            handleError={handleError}
+          />
         </>
+      )
+    } else {
+      return (
+        <ErrorPage 
+          errorCode={errorCode} 
+          errorMessageShort={errorMessageShort} 
+          errorMessageFull={errorMessageFull}/>
       )
     }
   }

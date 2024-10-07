@@ -18,6 +18,8 @@ export interface passDetailProps {
     passList: Array<PasswordListItem>,
     currentIndex: number,
     updatePassList: ({ id, site_favicon, username, email, password, url, salt, iv }: PasswordListItem, operation: string) => void,
+    handleClose: () => void,
+    handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
 }
 
 export interface IEditButtonProps {
