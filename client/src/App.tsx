@@ -1,13 +1,15 @@
-import { HTMLInputTypeAttribute, useEffect, useState, createContext, useContext } from 'react';
+import { HTMLInputTypeAttribute, useEffect, useState, createContext, useContext, Children } from 'react';
 import './App.css'
 import Generator from './Generator'
 import { PassDetails, EditButton } from './PassDetails';
 import { deriveKey, encryptPassword, decryptPassword, base64ToUint8Array } from './utils/encryption';
-import {useForm, FormProvider, useFormContext, FieldError, FieldErrorsImpl} from "react-hook-form"
+import {useForm, FormProvider, useFormContext } from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import { useAddPassword } from './utils/addPassword';
 import { PasswordItem, PasswordListItem } from './types';
+import { AuthProvider, useAuth } from "./AuthProvider";
+import { Login } from './Login';
 
 
 interface navigationProps {
@@ -63,14 +65,7 @@ interface ISearchBarProps {
   filterPL: (substring: string) => void;
 }
 
-// type PasswordListItem = {
-//   id: number;
-//   site_favicon: string;
-//   username: string;
-//   email: string;
-//   password: string;
-//   url: string;
-// }
+
 
 function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigationProps) {
   return (
@@ -315,6 +310,7 @@ function App() {
   const [currentPassIndex, setCurrentPassIndex] = useState<number>(0);
   const [canvasContent, setCanvasContent] = useState<string>("details");
   const [bodyContent, setBodyContent] = useState<string>("passbank");
+  const user = useAuth();
 
   useEffect(() => {
     const fetchPassList = async () => {
@@ -421,30 +417,40 @@ function App() {
   }
 
   function renderBody() {
-    if (bodyContent == "passbank") {
+    if (!user.token) {
+      return <Login/>
+    }
+    else if (bodyContent == "passbank") {
       return (
         <>
+          <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
           <Search filterPL={setFilterString}/>
           <PassBank 
           onPassItemClick={onPassItemClick}
           filterString={filterString}
           passwordList={passwordList}/>
+          <OffCanvasWindow renderCanvasContent={renderCanvasContent} show={showOffcanvas} setShow={setShowOffcanvas}/>
         </>
       );
-    } else if (bodyContent == "generator") {
+    } 
+    else if (bodyContent == "generator") {
       return (
-        <Generator readonlyPassword={true}/>
+        <>
+          <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
+          <Generator readonlyPassword={true}/>
+          <OffCanvasWindow renderCanvasContent={renderCanvasContent} show={showOffcanvas} setShow={setShowOffcanvas}/>
+        </>
       )
     }
   }
 
   return (
     <>
-      <div className='App'>
-        <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
-        {renderBody()}
-        <OffCanvasWindow renderCanvasContent={renderCanvasContent} show={showOffcanvas} setShow={setShowOffcanvas}/>
-      </div>
+        <AuthProvider>
+          <div className='App'>
+          {renderBody()}
+          </div>
+      </AuthProvider>
     </>
   )
 }

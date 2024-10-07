@@ -12,6 +12,8 @@ dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 5000; // You can choose any port
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 app.use(cors(corsOptions));
 app.use(express.json())
@@ -100,6 +102,22 @@ app.post("/deletePassword", async (req: Request, res: Response) => {
     }
   })
 });
+
+app.post("/login", async (req: Request, res: Response) => {
+  const {username, password} = req.body;
+
+  const userQuery = "SELECT * FROM users WHERE username = $1;"
+  const results = await pool.query(userQuery, [username])
+  if (!results || !await bcrypt.compare(password, results.rows[0].password)) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+
+  const user = results.rows[0];
+
+  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+  res.json({ token, user: { username: user.username } });
+})
 
 app.listen(port, () => {
   console.log(`Server is running on port number ${port}`);
