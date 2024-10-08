@@ -165,7 +165,7 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
                       ))
                     }
                   />
-                  <button type="button" className="btn btn-primary" onClick={handleShowPassword}>Show</button>
+                  <button type="button" className="btn btn-outline-secondary" onClick={handleShowPassword}>Show</button>
                 </div>
               </div>
               
@@ -199,11 +199,10 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
               </div>
               <div className='container d-flex justify-content-center'>
                 <EditButton isEditing={isEditing} toggleEditPassword={toggleEditPassword} updatePassword={updatePassword}/>
-                <button type="button" className="btn btn-primary mx-1" onClick={deletePassword}>Delete</button>
+                <button type="button" className="btn btn-secondary mx-1" onClick={deletePassword}>Delete</button>
               </div>
             </form>
           </ErrorBoundary>
-          
         </Offcanvas.Body>
       </>
     )
@@ -211,7 +210,7 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
 
 export function EditButton({isEditing, toggleEditPassword, updatePassword}: IEditButtonProps) {
     if (!isEditing) {
-        return <button type="button" className="btn btn-primary mx-1" onClick={toggleEditPassword}>Edit</button>;
+        return <button type="button" className="btn btn-secondary mx-1" onClick={toggleEditPassword}>Edit</button>;
     } else {
         return (
           <>
