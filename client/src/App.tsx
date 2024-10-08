@@ -11,6 +11,7 @@ import { PasswordItem, PasswordListItem } from './types';
 import { AuthProvider, useAuth } from "./AuthProvider";
 import { Login } from './Login';
 import { ErrorPage } from './ErrorPage';
+import Spinner from 'react-bootstrap/Spinner';
 
 
 interface navigationProps {
@@ -112,6 +113,14 @@ function Search({filterPL}: ISearchBarProps) {
   )
 }
 
+function LoadingAnimation() {
+  return (
+    <div className='container-fluid'>
+      <Spinner animation='border' variant='light'/>
+    </div>
+  )
+}
+
 function PassBankItem({passItem, index, onPassItemClick}: passBankItemProps) {
 
   function handleClick() {
@@ -139,6 +148,7 @@ function PassBankItem({passItem, index, onPassItemClick}: passBankItemProps) {
 
 function PassBank({passwordList, filterString, onPassItemClick, setPassList}: passBankProps) {
   const user = useAuth();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchPassList = async () => {
@@ -164,8 +174,9 @@ function PassBank({passwordList, filterString, onPassItemClick, setPassList}: pa
           });
           passList[i]['password'] = password;
         }
-        //console.log(passList);
+        console.log(passList);
         setPassList(passList);
+        setIsLoading(false);
       }).catch(err => {
         console.log("Error fetching password list: ",err);
         setPassList([])
@@ -205,7 +216,7 @@ function PassBank({passwordList, filterString, onPassItemClick, setPassList}: pa
   return (
     <div className='container-fluid'>
       <div className='list-group'>
-        {passBankItems}
+        {(isLoading) ? <LoadingAnimation/> : passBankItems}
       </div>
     </div>
   )
