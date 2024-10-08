@@ -6,11 +6,13 @@ import { ErrorMessage } from "@hookform/error-message";
 import { useDeletePassword, useUpdatePassword } from './utils/addPassword';
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorPage } from './ErrorPage';
+import { useAuth } from './AuthProvider';
 
 export function PassDetails({passList, currentIndex, updatePassList, handleClose, handleError} : passDetailProps) {
     const [passInputType, setPassInputType] = useState<string>("password");
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [passItem, setPassItem] = useState<PasswordListItem>(passList[currentIndex]);
+    const user = useAuth();
     const methods = useForm({ criteriaMode: "all" });
     //const passItem = passList[currentIndex];
     //console.log(passItem);
@@ -38,7 +40,7 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
     }
 
     async function deletePassword() {
-      const deletedPassword = await useDeletePassword(passItem.id);
+      const deletedPassword = await useDeletePassword(passItem.id, user.jwt);
 
       if (deletedPassword) {
         updatePassList({...passItem}, "delete");
@@ -57,6 +59,7 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
         email: data.email,
         password: data.password,
         url: data.url,
+        jwt: user.jwt,
         handleError: handleError
       });
       if (updatedPassword) {
