@@ -1,8 +1,9 @@
 import {useContext, createContext, useState, ReactNode} from "react";
+import { generateChallengeResponse } from "./utils/encryption";
 
 interface IAuthProvider {
     user: string | null,
-    token: string,
+    jwt: string,
     login: () => void,
     logout: () => void
 }
@@ -18,33 +19,48 @@ interface ILoginForm {
 
 const AuthContext = createContext({
     user: null,
-    token: "",
+    jwt: "",
     login: (data: ILoginForm) => {},
     logout: () => {}
 });
 
 export function AuthProvider({ children }: IAuthProps) {
     const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem("site") || "");
+    const [jwt, setJwt] = useState(localStorage.getItem("site") || "");
 
     async function login(data: ILoginForm) {
         try {
-            const response = await fetch("localhost:3001/login", {
+            const username = data.username;
+            const password = data.password;
+            const challengeResponse = await fetch("http://localhost:3001/login-challenge", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify({ username }),
             });
 
-            const res = await response.json();
-            if (response.ok) {
-                setUser(res.user);
-                setToken(res.token);
-                localStorage.setItem("site", res.token);
+            const { challenge, salt } = await challengeResponse.json();
+            
+            const response = await generateChallengeResponse(password, challenge, salt);
+
+            const verifyResponse = await fetch("http://localhost:3001/verify-challenge", {
+                method: "POST",
+                headers: {
+                    'Content-Type': "application/json",
+                },
+                body: JSON.stringify({ username, response, challenge })
+            });
+
+            const result = await verifyResponse.json();
+
+            if (result.success) {
+                setUser(result.user);
+                setJwt(result.token);
+                localStorage.setItem("site", result.token)
                 return;
             }
-            throw new Error(res.message);
+            throw new Error(result.message);
         } catch (err) {
             console.error(err);
         }
@@ -52,12 +68,12 @@ export function AuthProvider({ children }: IAuthProps) {
 
     async function logout() {
         setUser(null);
-        setToken("");
+        setJwt("");
         localStorage.removeItem("site");
     }
 
     return (
-        <AuthContext.Provider value={{user, token, login, logout}}>
+        <AuthContext.Provider value={{user, jwt, login, logout}}>
             {children}
         </AuthContext.Provider>
     );

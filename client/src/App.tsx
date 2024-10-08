@@ -74,8 +74,6 @@ interface ISearchBarProps {
   filterPL: (substring: string) => void;
 }
 
-
-
 function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigationProps) {
   return (
     <header className="px-3 py-1 mb-1 bg-dark text-white">
@@ -208,6 +206,7 @@ function NewPasswordForm({updatePasswordList, handleClose, handleError}: passwor
   const methods = useForm({
     criteriaMode: "all"
   });
+  const {jwt} = useAuth();
 
   const onSubmit = methods.handleSubmit(async data => {
     console.log(data);
@@ -216,7 +215,7 @@ function NewPasswordForm({updatePasswordList, handleClose, handleError}: passwor
     const email = data.email;
     const password = data.password;
     const url = data.url
-    const newPassword = await useAddPassword({site_favicon, username, email, password, url, handleError})
+    const newPassword = await useAddPassword({site_favicon, username, email, password, url, jwt, handleError})
     if (newPassword) {
       updatePasswordList(newPassword);
       handleClose();
@@ -337,14 +336,18 @@ function App() {
   const [currentPassIndex, setCurrentPassIndex] = useState<number>(0);
   const [canvasContent, setCanvasContent] = useState<string>("details");
   const [bodyContent, setBodyContent] = useState<string>("passbank");
-  const user = useAuth();
   const [errorCode, setErrorCode] = useState<string>("");
   const [errorMessageShort, setErrorMessageShort] = useState<string>("");
   const [errorMessageFull, setErrorMessageFull] = useState<string>("");
+  const user = useAuth();
 
   useEffect(() => {
     const fetchPassList = async () => {
-      fetch('http://localhost:3001/getPasswords').then(res => {
+      fetch('http://localhost:3001/getPasswords', {
+        headers: {
+          "Authorization": user.jwt,
+        }
+      }).then(res => {
         return res.json();
       }).then(async passList => {
         //console.log(passList);
@@ -441,7 +444,7 @@ function App() {
   }
 
   function renderBody() {
-    if (!user.token) {
+    if (!user.jwt) {
       return <Login/>
     }
     else if (bodyContent == "passbank") {

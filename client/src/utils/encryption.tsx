@@ -32,6 +32,30 @@ export function deriveKey(masterPassword: string, salt: string) {
     });
 };
 
+export async function deriveKeyLogin(masterPassword: string, salt: string) {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(masterPassword),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
+    );
+    
+    return await crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: enc.encode(salt),
+            iterations: 100000,
+            hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "HMAC", hash: "SHA-256", length: 256 },
+        true,
+        ["sign"]
+    );
+}
+
 export function encryptPassword(plaintextPassword:string, key:CryptoKey) {
     const encoder = new TextEncoder();
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
@@ -67,15 +91,31 @@ export function decryptPassword(encryptedData: EncryptedData, key: CryptoKey) {
     });
 }
 
-export function hashDerivedKey(key: CryptoKey) {
+export function hashDerivedKeyToBase64(key: CryptoKey) {
     return window.crypto.subtle.exportKey('raw', key).then(keyBytes => {
         return window.crypto.subtle.digest("SHA-256", keyBytes).then(hashBuffer => {
             // convert hash buffer to hex string
             const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join("");
-            return hashHex
+            //const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join("");
+            const hash64 = arrayBufferToBase64(new Uint8Array(hashBuffer));
+            return hash64
         });
     });
+}
+
+export async function hashDerivedKeyToCryptoKey(key: CryptoKey) {
+    const rawKey = await crypto.subtle.exportKey("raw", key);
+
+    const hashedKeyBuffer = await crypto.subtle.digest("SHA-256", rawKey);
+
+    const hashedKey = await crypto.subtle.importKey(
+        "raw",
+        hashedKeyBuffer,
+        { name:"HMAC", hash:"SHA-256" },
+        true,
+        ["sign"]
+    )
+    return hashedKey;
 }
 
 export function arrayBufferToBase64(buffer: Uint8Array) {
@@ -100,3 +140,37 @@ export function base64ToUint8Array(base64: string) {
     return bytes;
   }
  
+
+export async function generateChallengeResponse(password: string, challenge: string, salt:string) {
+    const key = await deriveKeyLogin(password, salt);
+    const hashedKey = await hashDerivedKeyToCryptoKey(key);
+
+    // Compute the HMAC using the derived key and challenge
+    const enc = new TextEncoder();
+    const signature = await crypto.subtle.sign(
+        "HMAC",
+        hashedKey,
+        enc.encode(challenge)
+    );
+
+    return arrayBufferToBase64(new Uint8Array(signature));
+}
+
+export async function registerUser(username: string, masterPassword: string) {
+    const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
+    const derivedKey = await deriveKeyLogin(masterPassword, salt);
+    const hashedKey = await hashDerivedKeyToBase64(derivedKey);
+    console.log(derivedKey, hashedKey);
+
+    const registerRes = await fetch("http://localhost:3001/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+            username: username,
+            hashedKey: hashedKey,
+            salt: salt,
+        }),
+    });
+}

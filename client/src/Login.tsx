@@ -3,6 +3,7 @@ import { useAuth } from "./AuthProvider";
 import { FormEventHandler } from "react";
 import { useForm } from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
+import { registerUser } from "./utils/encryption";
 
 
 export function Login() {
@@ -18,8 +19,13 @@ export function Login() {
         });
         return;
     }
-    alert("please provide a valid input");
+    console.log("please provide a valid input");
     });
+
+    const handleRegister = methods.handleSubmit(async data => {
+        console.log(data);
+        registerUser(data.username, data.password);
+    })
 
     return (
         <div className="container">
@@ -72,6 +78,7 @@ export function Login() {
                 </div>
                 <div className='container d-flex justify-content-center'>
                 <button type="button" className="btn btn-primary mx-1" onClick={handleLogin}>Login</button>
+                <button type="button"className="btn btn-primary mx-1" onClick={handleRegister}>Register</button>
                 </div>
             </form>
         </div>

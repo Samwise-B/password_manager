@@ -3,12 +3,13 @@ import { PasswordListItem } from "../types";
 import { deriveKey, encryptPassword, arrayBufferToBase64 } from "./encryption";
 
 export interface IAddPassword {
-    site_favicon: string,
-    username: string,
-    email: string,
-    url: string,
-    password: string,
-    handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void,
+    site_favicon: string;
+    username: string;
+    email: string;
+    url: string;
+    password: string;
+    jwt: string;
+    handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void;
 }
 export interface IUpdatePassword {
     id: number;
@@ -17,6 +18,7 @@ export interface IUpdatePassword {
     email: string;
     url: string;
     password: string;
+    jwt: string;
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
 }
 
@@ -25,7 +27,7 @@ export interface IDeletePassword {
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
 }
 
-export async function useAddPassword({site_favicon, username, email, password, url}: IAddPassword) {
+export async function useAddPassword({site_favicon, username, email, password, url, jwt}: IAddPassword) {
     console.log({site_favicon, username, email, password, url});
     const masterKey = "secretpassword";
     const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
@@ -46,7 +48,8 @@ export async function useAddPassword({site_favicon, username, email, password, u
             method: "POST",
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                "Authorization": jwt
             },
             body: JSON.stringify(newPassword)
         });
@@ -70,7 +73,7 @@ export async function useAddPassword({site_favicon, username, email, password, u
     }
 }
 
-export async function useUpdatePassword({id, site_favicon, username, email, password, url}: IUpdatePassword) {
+export async function useUpdatePassword({id, site_favicon, username, email, password, url, jwt}: IUpdatePassword) {
     console.log({site_favicon, username, email, password, url});
     const masterKey = "secretpassword";
     // generate new encryption key & encrypt password
@@ -92,7 +95,8 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
             method: "POST",
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                "Authorization": jwt
             },
             body: JSON.stringify(updatedPassword)
         });
@@ -117,14 +121,15 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
     }
 };
 
-export async function useDeletePassword(id: number) {
+export async function useDeletePassword(id: number, jwt: string) {
     console.log("deleting:", id);
     try {
         const res = await fetch("http://localhost:3001/deletePassword", {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                "Authorization": jwt
             },
             body: JSON.stringify({id: id})
         });
