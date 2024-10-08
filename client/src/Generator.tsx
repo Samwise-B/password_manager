@@ -55,28 +55,30 @@ function PasswordBox({password, isReadOnly, onRefreshClick, onChangePassword} : 
   }
 
   return (
-    <>
-      <label htmlFor="generatedPassword" className="form-label">Password</label>
+    <div className="pt-3">
       {errorMessage}
+      <label htmlFor="passwordLength" className="form-label text-light">Password</label>
       <div className='PasswordText input-group mb-3'>
         {passwordInput}
         <button type='button' className="btn btn-outline-secondary" id="passwordRefresh" onClick={onRefreshClick}>Refresh</button>      
       </div>
-    </>
+    </div>
   )
 }
 
 function PassLength({passLength, handleLength}: passLengthProps) {
   return (
-    <div className='row g-2 align-items-center'>
-      <div className='col-auto'>
-        <label htmlFor="passwordLength" className="form-label text-light">Length</label>
-      </div>
-      <div className='col-auto'>
-        <input type="range" className="form-range" value={passLength} min={4} max={48} step={1} id="passwordLength" onChange={handleLength}></input>
-      </div>
-      <div className='col-auto'>
-        <span className='form-text text-light'>{passLength}</span>
+    <div className='container'>
+      <div className='row'>
+        <div className='col-1'>
+          <label htmlFor="passwordLength" className="form-label text-light">Length</label>
+        </div>
+        <div className='col-10'>
+          <input type="range" className="form-range" value={passLength} min={4} max={48} step={1} id="passwordLength" onChange={handleLength}></input>
+        </div>
+        <div className='col-1'>
+          <span className='form-text text-light'>{passLength}</span>
+        </div>
       </div>
     </div>
   )
@@ -85,9 +87,9 @@ function PassLength({passLength, handleLength}: passLengthProps) {
 function Checkbox({flagType, hasFlag, handleFlag}: checkboxProps) {
 
   return (
-    <div className="form-check">
-      <input className="form-check-input" type="checkbox" value="" id={flagType} onChange={handleFlag} checked={hasFlag}></input>
-      <label className="form-check-label text-light" htmlFor={flagType}>
+    <div className="form-check form-switch d-flex align-items-start">
+      <input className="form-check-input mx-1" type="checkbox" value="" id={flagType} onChange={handleFlag} checked={hasFlag}></input>
+      <label className="form-check-label d-inline text-light mx-3" htmlFor={flagType}>
         {flagType}
       </label>
     </div>
@@ -148,15 +150,16 @@ export default function Generator({readonlyPassword} : generatorProps) {
   }
 
   return (
-    <div className='container-sm text-dark'>
-          <PasswordBox onRefreshClick={getPassword} password={password} onChangePassword={onChangePassword} isReadOnly={readonlyPassword}/>
-          <PassLength passLength={passLength} handleLength={handleLength}/>
-          <div className='mb-3'>
-              <Checkbox flagType={"Letters"} hasFlag={hasLetters} handleFlag={handleHasLetters}/>
-              <Checkbox flagType={"Digits"} hasFlag={hasDigits} handleFlag={handleHasDigits}/>
-              <Checkbox flagType={"Symbols"} hasFlag={hasSymbols} handleFlag={handleHasSymbols}/>
-          </div>
-          {renderErrorMessage()}
+    <div className='container-fluid text-secondary border-top border-secondary'>
+      <PasswordBox onRefreshClick={getPassword} password={password} onChangePassword={onChangePassword} isReadOnly={readonlyPassword}/>
+      <PassLength passLength={passLength} handleLength={handleLength}/>
+      <div className='mb-3'>
+        <Checkbox flagType={"Letters"} hasFlag={hasLetters} handleFlag={handleHasLetters}/>
+        <Checkbox flagType={"Digits"} hasFlag={hasDigits} handleFlag={handleHasDigits}/>
+        <Checkbox flagType={"Symbols"} hasFlag={hasSymbols} handleFlag={handleHasSymbols}/>
+      </div>
+      {renderErrorMessage()}
     </div>
+      
   )
 }

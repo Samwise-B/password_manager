@@ -1,0 +1,66 @@
+@import "../node_modules/bootstrap/scss/bootstrap";
+  
+.nav-link {
+    color: #FCF7F8 !important;
+    &.active {
+        color: #FCF7F8 !important;
+    }
+}
+
+.bg-dark {
+    background-color: #404258 !important;
+}
+
+.bg-secondary {
+    background-color: #474E68 !important;
+}
+
+.border-dark {
+    border-color: #404258 !important;
+}
+
+.border-secondary {
+    border-color: #474E68 !important;
+}
+
+.bg-primary {
+    background-color: #474E68 !important;
+}
+
+.btn-secondary {
+    --bs-btn-bg: #404258 !important;
+    --bs-btn-hover-bg: #50577A !important;
+}
+
+.btn-outline-secondary {
+    --bs-btn-bg: #404258 !important;
+    --bs-btn-hover-bg: #50577A !important;
+    --bs-btn-color: #FCF7F8 !important;
+    --bs-btn-border-color: #6B728E !important;
+}
+
+.pass-item {
+    color: #FCF7F8;
+    &:hover {
+        background-color: #50577A !important; 
+        color: #FCF7F8;
+    }
+}
+
+.list-group-item-action:focus {
+    color: #FCF7F8;
+    background-color: #404258 !important;
+}
+
+.offcanvas-header {
+    background-color: #474E68 !important;
+}
+
+.form-check-input {
+    background-color: #474E68;
+    &:checked {
+        background-color: #50577A;
+        border-color: #50577A;
+        $form-switch-focus-color: #50577A;
+    }
+}

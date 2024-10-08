@@ -1,13 +1,20 @@
-import { HTMLInputTypeAttribute, useEffect, useState, createContext, useContext } from 'react';
-import './App.css'
-import Generator from './Generator'
+import { HTMLInputTypeAttribute, useEffect, useState, createContext, useContext, Children } from 'react';
+import './css/App.css';
+import './scss/styles.scss';
+import Generator from './Generator';
 import { PassDetails, EditButton } from './PassDetails';
 import { deriveKey, encryptPassword, decryptPassword, base64ToUint8Array } from './utils/encryption';
-import {useForm, FormProvider, useFormContext, FieldError, FieldErrorsImpl} from "react-hook-form"
+import {useForm, FormProvider, useFormContext } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import { useAddPassword } from './utils/addPassword';
-import { PasswordItem } from './types';
+import { PasswordItem, PasswordListItem } from './types';
+import { AuthProvider, useAuth } from "./AuthProvider";
+import { Login } from './Login';
+import { ErrorPage } from './ErrorPage';
+import Spinner from 'react-bootstrap/Spinner';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import classNames from "classnames";
 
 
 interface navigationProps {
@@ -37,58 +44,84 @@ interface IErrorProps {
 }
 
 interface passwordCreatorProps {
-  updatePasswordList: ({site_favicon, username, email, password, url}: PasswordListItem) => void;
+  updatePasswordList: ({site_favicon, username, email, password, url}: PasswordListItem) => void,
+  handleClose: () => void,
+  handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void,
 }
 
 interface passBankProps {
-  passwordList: Array<PasswordListItem>;
-  filterString: string;
-  onPassItemClick: (index: number) => void;
+  passwordList: Array<PasswordListItem>,
+  filterString: string,
+  onPassItemClick: (index: number) => void,
+  setPassList: (passList: Array<PasswordListItem>) => void,
 }
 
-
-
 interface passBankItemProps {
-  index: number;
-  site_favicon: string;
-  username: string;
-  email: string;
-  url: string;
-  onPassItemClick: (index: number) => void;
+  key: number,
+  index: number,
+  passItem: PasswordListItem,
+  onPassItemClick: (index: number) => void,
 }
 
 interface OffCanvasProps {
-  renderCanvasContent: () => React.ReactNode;
+  //renderCanvasContent: () => React.ReactNode;
   show: boolean;
   setShow: (val: boolean) => void;
+  canvasContent: string; 
+  passList: Array<PasswordListItem>; 
+  currentIndex: number; 
+  UpdatePassList: ({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem, operation: string) => void; 
+  AddToPassList: ({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem) => void;
+  handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void;
 }
 
 interface ISearchBarProps {
   filterPL: (substring: string) => void;
 }
 
-type PasswordListItem = {
-  site_favicon: string;
-  username: string;
-  email: string;
-  password: string;
-  url: string;
-}
-
 function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigationProps) {
+  const [isBankActive, setIsBankActive] = useState<boolean>(true);
+  const [isGenActive, setIsGenActive] = useState<boolean>(false);
+
+  function handleBankClick() {
+    setIsGenActive(false);
+    setIsBankActive(true);
+    onBankClick();
+  }
+
+  function handleGenClick() {
+    setIsBankActive(false);
+    setIsGenActive(true);
+    onGeneratorClick();
+  }
+
+  const bankBtnClass = classNames({
+    "nav-link": true,
+    "active": isBankActive
+  });
+
+  const genBtnClass = classNames({
+    "nav-link": true,
+    "active": isGenActive
+  })
+
   return (
-    <header className="px-3 py-1 mb-1 bg-dark text-white">
+    <header className="px-3 py-1 bg-secondary text-white">
       <div className='container-fluid'>
         <div className='d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start'>
           <ul className="nav nav-underline d-flex align-items-center me-lg-auto">
-            <li className="nav-item">
-              <button type="button" className="nav-link active" aria-current="page" onClick={onBankClick}>Bank</button>
+            <li className="nav-item list-group-item">
+              <button type="button" className={bankBtnClass} aria-current={isBankActive} onClick={handleBankClick}>
+                <i className="bi bi-shield-lock mx-2"></i>Bank
+              </button>
             </li>
             <li className="nav-item">
-              <button type="button" className="nav-link" onClick={onGeneratorClick}>Generator</button>
+              <button type="button" className={genBtnClass} aria-current={isGenActive} onClick={handleGenClick}>
+                <i className="bi bi-chat-left-text mx-2"></i>Generator
+              </button>
             </li>
           </ul>
-          <button type="button" className="btn btn-outline-primary mx-2 align-items-center" onClick={onNewPasswordClick} data-bs-toggle="offcanvas" data-bs-target="#offCanvasWindow">New</button>
+          <button type="button" className="btn btn-secondary mx-2 align-items-center" onClick={onNewPasswordClick} data-bs-toggle="offcanvas" data-bs-target="#offCanvasWindow"><i className="bi bi-plus"></i></button>
         </div>
       </div>
       
@@ -105,31 +138,39 @@ function Search({filterPL}: ISearchBarProps) {
 
   return (
     <>
-      <div className='container-fluid input-group mb-3'>
-        <input className="form-control" type="text" id="generatedPassword" placeholder='Search' onChange={handleChange}></input>    
+      <div className='container-fluid input-group py-3 border-bottom border-secondary'>
+        <input className="form-control border-secondary" type="text" id="generatedPassword" placeholder='Search' onChange={handleChange}></input>    
       </div>
     </>
   )
 }
 
-function PassBankItem({index, site_favicon, url, email, username, onPassItemClick}: passBankItemProps) {
+function LoadingAnimation() {
+  return (
+    <div className='container-fluid'>
+      <Spinner animation='border' variant='light'/>
+    </div>
+  )
+}
+
+function PassBankItem({passItem, index, onPassItemClick}: passBankItemProps) {
 
   function handleClick() {
     onPassItemClick(index);
   }
 
   return (
-    <button type="button" className="list-group-item list-group-item-action rounded-0" onClick={handleClick} data-bs-toggle="offcanvas" data-bs-target="#offCanvasWindow" aria-current="true">
+    <button type="button" className="list-group-item list-group-item-action rounded-0 bg-dark border-dark pass-item" onClick={handleClick} data-bs-toggle="offcanvas" data-bs-target="#offCanvasWindow" aria-current="true">
       <div className="row">
         <div className="col-sm-1 fw-bold">
-          <img src={site_favicon} alt="" className="rounded"></img>
+          <i className="bi bi-key-fill h1"></i>
         </div>
         <div className='col-sm-11'>
           <div className='row mx-auto justify-content-center'>
-            {url}
+            {passItem.url}
           </div>
           <div className='row justify-content-center'>
-            {email}
+            {passItem.email}
           </div>
         </div>
       </div>
@@ -137,9 +178,46 @@ function PassBankItem({index, site_favicon, url, email, username, onPassItemClic
 )
 }
 
-function PassBank({passwordList, onPassItemClick, filterString}: passBankProps) {
+function PassBank({passwordList, filterString, onPassItemClick, setPassList}: passBankProps) {
+  const user = useAuth();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  
+  useEffect(() => {
+    const fetchPassList = async () => {
+      console.log(user);
+      fetch('http://localhost:3001/getPasswords', {
+        headers: {
+          "Authorization": user.jwt,
+        }
+      }).then(res => {
+        return res.json();
+      }).then(async passList => {
+        //console.log(passList);
+        const masterKey = "secretpassword";
+        for (let i=0; i < passList.length; i++) {
+          const encryptedData = {
+            iv: base64ToUint8Array(passList[i].iv),
+            ciphertext: base64ToUint8Array(passList[i].encrypted_password)
+          }
+          //console.log(encryptedData)
+          const password = await deriveKey(masterKey, passList[i].salt).then(key => {
+            //console.log("encryption key", key);
+            return decryptPassword(encryptedData, key);
+          });
+          passList[i]['password'] = password;
+        }
+        console.log(passList);
+        setPassList(passList);
+        setIsLoading(false);
+      }).catch(err => {
+        console.log("Error fetching password list: ",err);
+        setPassList([])
+      })
+    };
+
+    fetchPassList();
+  }, [])
+
   function filterPasswordList(substring: string) {
     let newFilteredPL: Array<PasswordListItem> = [];
 
@@ -164,19 +242,19 @@ function PassBank({passwordList, onPassItemClick, filterString}: passBankProps) 
   }
 
   const passBankItems: React.ReactNode = filterPasswordList(filterString).map((passItem, index) =>
-    <PassBankItem index={index} site_favicon='/vite.svg' email={passItem.email} username={passItem.username} url={passItem.url} onPassItemClick={onPassItemClick}/>
+    <PassBankItem passItem={passItem} key={passItem.id} index={index} onPassItemClick={onPassItemClick}/>
   );
 
   return (
-    <div className='container-fluid'>
+    <div className='container-fluid px-0'>
       <div className='list-group'>
-        {passBankItems}
+        {(isLoading) ? <LoadingAnimation/> : passBankItems}
       </div>
     </div>
   )
 }
 
-function Input({ label, type, id, placeholder, pattern, errorMessage }: IInputProps) {
+export function Input({ label, type, id, placeholder, pattern, errorMessage }: IInputProps) {
   const { register, formState: {errors} } = useFormContext();
 
   return (
@@ -205,19 +283,27 @@ function Input({ label, type, id, placeholder, pattern, errorMessage }: IInputPr
   );
 }
 
-function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
+function NewPasswordForm({updatePasswordList, handleClose, handleError}: passwordCreatorProps) {
   const methods = useForm({
     criteriaMode: "all"
   });
+  const {jwt} = useAuth();
 
-  const onSubmit = methods.handleSubmit(data => {
+  const onSubmit = methods.handleSubmit(async data => {
     console.log(data);
     const site_favicon = "/vite.svg"
     const username = data.username;
     const email = data.email;
     const password = data.password;
     const url = data.url
-    updatePasswordList({site_favicon, username, email, password, url});
+    const newPassword = await useAddPassword({site_favicon, username, email, password, url, jwt, handleError})
+    if (newPassword) {
+      updatePasswordList(newPassword);
+      handleClose();
+    } else {
+      alert("password not added");
+    }
+    
   })
 
   return (
@@ -262,44 +348,42 @@ function NewPasswordForm({updatePasswordList}: passwordCreatorProps) {
   );
 }
 
-function PasswordCreator({updatePasswordList}: passwordCreatorProps) {
+function PasswordCreator({updatePasswordList, handleClose, handleError }: passwordCreatorProps) {
   return (
     <>
       <Offcanvas.Header closeButton>
         <Offcanvas.Title>New Password</Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
-        <NewPasswordForm updatePasswordList={updatePasswordList}/>
-        {/* <form onSubmit={addNewPassword} className="needs-validation" noValidate={true}>
-          <div className="container mb-3">
-            <label htmlFor="emailInput" className="form-label">Email address</label>
-            <input type="email" className="form-control" id="emailInput" placeholder="name@example.com" name="email" required></input>
-            <div className='username-validation'>
-              Please choose a username.
-            </div>
-          </div>
-          <div className="container mb-3">
-            <label htmlFor="usernameInput" className="form-label">Username</label>
-            <input type="us" className="form-control" id="usernameInput" aria-describedby="emailHelp" required></input>
-          </div>
-          <Generator readonlyPassword={false}/>
-          <div className="container mb-3">
-            <label htmlFor="urlInput" className="form-label">Website</label>
-            <input type="url" className="form-control" id="urlInput" placeholder="https://www.placeholder.com" name="url"></input>
-          </div>
-          <button type="submit" className="btn btn-outline-secondary">Submit</button>
-        </form> */}
+        <NewPasswordForm handleClose={handleClose} updatePasswordList={updatePasswordList} handleError={handleError}/>
       </Offcanvas.Body>
     </>
   )
 }
 
-function OffCanvasWindow({renderCanvasContent, show, setShow} : OffCanvasProps) {
+function OffCanvasWindow({canvasContent, passList, currentIndex, UpdatePassList, AddToPassList, show, setShow, handleError} : OffCanvasProps) {
 
   const handleClose = () => {
     console.log("handle close");
     setShow(false);
   }
+
+  function renderCanvasContent() {
+    if (canvasContent == "details") {
+      return (
+        <PassDetails 
+        passList={passList} 
+        currentIndex={currentIndex}
+        updatePassList={UpdatePassList}
+        handleClose={handleClose}
+        handleError={handleError}
+        />
+      )
+    } else if (canvasContent == "add_pass") {
+      return <PasswordCreator updatePasswordList={AddToPassList} handleClose={handleClose} handleError={handleError}/>
+    }
+  }
+
   return (
     <Offcanvas show={show} onHide={handleClose} id="offCanvasWindow" placement='end' className='w-75 bg-dark text-light'>
       {renderCanvasContent()}
@@ -307,73 +391,66 @@ function OffCanvasWindow({renderCanvasContent, show, setShow} : OffCanvasProps) 
   );
 }
 
-function App() {
+function Body() {
   const [passwordList, setPasswordList] = useState<Array<PasswordListItem>>([]);
-  const [newPassword, setNewPassword] = useState<PasswordListItem>({
-    site_favicon: "",
-    username: "",
-    email: "",
-    password: "",
-    url: ""
-  });
   const [filterString, setFilterString] = useState<string>("");
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [currentPassIndex, setCurrentPassIndex] = useState<number>(0);
   const [canvasContent, setCanvasContent] = useState<string>("details");
   const [bodyContent, setBodyContent] = useState<string>("passbank");
+  const [errorCode, setErrorCode] = useState<string>("");
+  const [errorMessageShort, setErrorMessageShort] = useState<string>("");
+  const [errorMessageFull, setErrorMessageFull] = useState<string>("");
+  const user = useAuth();
 
-  useEffect(() => {
-    const fetchPassList = async () => {
-      fetch('http://localhost:3001/getPasswords').then(res => {
-        return res.json();
-      }).then(async passList => {
-        //console.log(passList);
-        const masterKey = "secretpassword";
-        for (let i=0; i < passList.length; i++) {
-          const encryptedData = {
-            iv: base64ToUint8Array(passList[i].iv),
-            ciphertext: base64ToUint8Array(passList[i].encrypted_password)
-          }
-          //console.log(encryptedData)
-          const password = await deriveKey(masterKey, passList[i].salt).then(key => {
-            //console.log("encryption key", key);
-            return decryptPassword(encryptedData, key);
-          });
-          passList[i]['password'] = password;
-        }
-        //console.log(passList);
-        setPasswordList(passList);
-      }).catch(err => {
-        console.log("Error fetching password list: ",err);
-        setPasswordList([])
-      })
-    };
 
-    fetchPassList();
-  }, [])
-
-  useAddPassword(newPassword);
+  function handleError(errorCode: string, errorMessageShort:string, errorMessageFull:string) {
+    setErrorCode(errorCode);
+    setErrorMessageShort(errorMessageShort);
+    setErrorMessageFull(errorMessageFull);
+    setBodyContent("error")
+  }
   
-  function updatePasswordList({site_favicon, username, email, password, url}: PasswordListItem) {
+  function AddToPasswordList({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem) {
     // add password on backend
-    setNewPassword({
-      site_favicon: site_favicon,
-      username: username,
-      email: email,
-      password: password,
-      url: url
-    });
     const newArr = [...passwordList];
     newArr.push({
+      id: id,
       site_favicon: site_favicon,
       username: username,
       email: email,
       password: password,
-      url: url
+      url: url,
+      salt: salt,
+      iv: iv
     });
     setPasswordList(newArr);
-    
     setBodyContent("passbank");
+  }
+
+  function UpdatePasswordList({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem, operation: string) {
+    if (operation == "update") {
+      const newPassList = passwordList.map((passItem) => {
+        if (passItem.id == id) {
+            return {
+              id: id,
+              site_favicon: site_favicon,
+              username: username,
+              email: email,
+              password: password,
+              url: url,
+              salt: salt,
+              iv: iv
+            };
+        } else {
+          return passItem;
+        }
+      })
+      setPasswordList([...newPassList]);
+    } else if (operation == "delete") {
+      const newPassList = passwordList.filter(passItem => passItem.id !== id);
+      setPasswordList([...newPassList])
+    }
   }
 
   function onPassItemClick(index: number) {
@@ -395,44 +472,77 @@ function App() {
     setCanvasContent("add_pass");
   }
 
-  function renderCanvasContent() {
-    if (canvasContent == "details") {
-      return (
-        <PassDetails 
-        passList={passwordList} 
-        currentIndex={currentPassIndex}/>
-      )
-    } else if (canvasContent == "add_pass") {
-      return <PasswordCreator updatePasswordList={updatePasswordList}/>
-    }
-  }
-
   function renderBody() {
-    if (bodyContent == "passbank") {
+    if (!user.jwt) {
+      return <Login/>
+    }
+    else if (bodyContent == "passbank") {
       return (
         <>
+          <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
           <Search filterPL={setFilterString}/>
           <PassBank 
-          onPassItemClick={onPassItemClick}
           filterString={filterString}
-          passwordList={passwordList}/>
+          passwordList={passwordList}
+          onPassItemClick={onPassItemClick}
+          setPassList={setPasswordList}
+          />
+          <OffCanvasWindow
+            canvasContent={canvasContent} 
+            passList={passwordList} 
+            currentIndex={currentPassIndex} 
+            show={showOffcanvas} 
+            setShow={setShowOffcanvas}
+            AddToPassList={AddToPasswordList}
+            UpdatePassList={UpdatePasswordList}
+            handleError={handleError}
+          />
         </>
       );
-    } else if (bodyContent == "generator") {
+    } 
+    else if (bodyContent == "generator") {
       return (
-        <Generator readonlyPassword={true}/>
+        <>
+          <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
+          <div className='container'>
+            <Generator readonlyPassword={true}/>
+          </div>
+          <OffCanvasWindow 
+            canvasContent={canvasContent} 
+            passList={passwordList} 
+            currentIndex={currentPassIndex} 
+            show={showOffcanvas} 
+            setShow={setShowOffcanvas}
+            AddToPassList={AddToPasswordList}
+            UpdatePassList={UpdatePasswordList}
+            handleError={handleError}
+          />
+        </>
+      )
+    } else {
+      return (
+        <ErrorPage 
+          errorCode={errorCode} 
+          errorMessageShort={errorMessageShort} 
+          errorMessageFull={errorMessageFull}/>
       )
     }
   }
 
   return (
     <>
-      <div className='App'>
-        <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
-        {renderBody()}
-        <OffCanvasWindow renderCanvasContent={renderCanvasContent} show={showOffcanvas} setShow={setShowOffcanvas}/>
-      </div>
+          {renderBody()}
     </>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <div className='App'>
+        <Body/>
+      </div>
+    </AuthProvider>
   )
 }
 
