@@ -47,6 +47,11 @@
     }
 }
 
+.list-group-item-action:focus {
+    color: #FCF7F8;
+    background-color: #404258 !important;
+}
+
 .offcanvas-header {
     background-color: #474E68 !important;
 }

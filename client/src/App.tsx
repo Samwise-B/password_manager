@@ -163,7 +163,7 @@ function PassBankItem({passItem, index, onPassItemClick}: passBankItemProps) {
     <button type="button" className="list-group-item list-group-item-action rounded-0 bg-dark border-dark pass-item" onClick={handleClick} data-bs-toggle="offcanvas" data-bs-target="#offCanvasWindow" aria-current="true">
       <div className="row">
         <div className="col-sm-1 fw-bold">
-          <img src={passItem.site_favicon} alt="" className="rounded"></img>
+          <i className="bi bi-key-fill h1"></i>
         </div>
         <div className='col-sm-11'>
           <div className='row mx-auto justify-content-center'>
