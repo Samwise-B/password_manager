@@ -6,7 +6,7 @@ import cors from 'cors';
 import { verifyToken } from "./utils";
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:5432"],
+  origin: ["http://localhost:8080", "http://localhost:5432"],
   optionsSuccessStatus:200
 }
 // add .env configuration
@@ -96,22 +96,6 @@ app.post("/deletePassword", verifyToken, async (req: Request, res: Response) => 
     }
   })
 });
-
-// app.post("/login", async (req: Request, res: Response) => {
-//   const {username, password} = req.body;
-
-//   const userQuery = "SELECT * FROM users WHERE username = $1;"
-//   const results = await pool.query(userQuery, [username])
-//   if (!results || !await bcrypt.compare(password, results.rows[0].password)) {
-//     return res.status(401).json({ message: 'Invalid credentials' });
-//   }
-
-//   const user = results.rows[0];
-
-//   const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-//   res.json({ token, user: { username: user.username } });
-// })
 
 app.post("/login-challenge", async (req: Request, res: Response) => {
   const { username } = req.body;
