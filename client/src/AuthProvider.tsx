@@ -55,6 +55,7 @@ export function AuthProvider({ children }: IAuthProps) {
             const result = await verifyResponse.json();
 
             if (result.success) {
+                console.log("Successful Authentication!", result.user, result.token);
                 setUser(result.user);
                 setJwt(result.token);
                 localStorage.setItem("site", result.token)

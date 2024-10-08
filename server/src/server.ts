@@ -158,7 +158,7 @@ app.post("/verify-challenge", async (req: Request, res: Response) => {
     return res.json({
       success: true,
       token: token,
-      user: user
+      user: user.username
     })
   } else {
     return res.status(401).json({ 

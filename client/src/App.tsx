@@ -49,6 +49,7 @@ interface passBankProps {
   passwordList: Array<PasswordListItem>,
   filterString: string,
   onPassItemClick: (index: number) => void,
+  setPassList: (passList: Array<PasswordListItem>) => void,
 }
 
 interface passBankItemProps {
@@ -136,7 +137,44 @@ function PassBankItem({passItem, index, onPassItemClick}: passBankItemProps) {
 )
 }
 
-function PassBank({passwordList, onPassItemClick, filterString}: passBankProps) {
+function PassBank({passwordList, filterString, onPassItemClick, setPassList}: passBankProps) {
+  const user = useAuth();
+
+  useEffect(() => {
+    const fetchPassList = async () => {
+      console.log(user);
+      fetch('http://localhost:3001/getPasswords', {
+        headers: {
+          "Authorization": user.jwt,
+        }
+      }).then(res => {
+        return res.json();
+      }).then(async passList => {
+        //console.log(passList);
+        const masterKey = "secretpassword";
+        for (let i=0; i < passList.length; i++) {
+          const encryptedData = {
+            iv: base64ToUint8Array(passList[i].iv),
+            ciphertext: base64ToUint8Array(passList[i].encrypted_password)
+          }
+          //console.log(encryptedData)
+          const password = await deriveKey(masterKey, passList[i].salt).then(key => {
+            //console.log("encryption key", key);
+            return decryptPassword(encryptedData, key);
+          });
+          passList[i]['password'] = password;
+        }
+        //console.log(passList);
+        setPassList(passList);
+      }).catch(err => {
+        console.log("Error fetching password list: ",err);
+        setPassList([])
+      })
+    };
+
+    fetchPassList();
+  }, [])
+
   function filterPasswordList(substring: string) {
     let newFilteredPL: Array<PasswordListItem> = [];
 
@@ -329,7 +367,7 @@ function OffCanvasWindow({canvasContent, passList, currentIndex, UpdatePassList,
   );
 }
 
-function App() {
+function Body() {
   const [passwordList, setPasswordList] = useState<Array<PasswordListItem>>([]);
   const [filterString, setFilterString] = useState<string>("");
   const [showOffcanvas, setShowOffcanvas] = useState(false);
@@ -341,39 +379,6 @@ function App() {
   const [errorMessageFull, setErrorMessageFull] = useState<string>("");
   const user = useAuth();
 
-  useEffect(() => {
-    const fetchPassList = async () => {
-      fetch('http://localhost:3001/getPasswords', {
-        headers: {
-          "Authorization": user.jwt,
-        }
-      }).then(res => {
-        return res.json();
-      }).then(async passList => {
-        //console.log(passList);
-        const masterKey = "secretpassword";
-        for (let i=0; i < passList.length; i++) {
-          const encryptedData = {
-            iv: base64ToUint8Array(passList[i].iv),
-            ciphertext: base64ToUint8Array(passList[i].encrypted_password)
-          }
-          //console.log(encryptedData)
-          const password = await deriveKey(masterKey, passList[i].salt).then(key => {
-            //console.log("encryption key", key);
-            return decryptPassword(encryptedData, key);
-          });
-          passList[i]['password'] = password;
-        }
-        //console.log(passList);
-        setPasswordList(passList);
-      }).catch(err => {
-        console.log("Error fetching password list: ",err);
-        setPasswordList([])
-      })
-    };
-
-    fetchPassList();
-  }, [])
 
   function handleError(errorCode: string, errorMessageShort:string, errorMessageFull:string) {
     setErrorCode(errorCode);
@@ -453,9 +458,11 @@ function App() {
           <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
           <Search filterPL={setFilterString}/>
           <PassBank 
-          onPassItemClick={onPassItemClick}
           filterString={filterString}
-          passwordList={passwordList}/>
+          passwordList={passwordList}
+          onPassItemClick={onPassItemClick}
+          setPassList={setPasswordList}
+          />
           <OffCanvasWindow
             canvasContent={canvasContent} 
             passList={passwordList} 
@@ -498,12 +505,18 @@ function App() {
 
   return (
     <>
-        <AuthProvider>
-          <div className='App'>
           {renderBody()}
-          </div>
-      </AuthProvider>
     </>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <div className='App'>
+        <Body/>
+      </div>
+    </AuthProvider>
   )
 }
 

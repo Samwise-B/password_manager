@@ -11,6 +11,7 @@ interface AuthenticatedRequest extends Request {
 
 export async function verifyToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     const token = req.headers['authorization'];
+    console.log(req.headers);
 
     if (!token) {
         return res.status(403).send({error: "User must be authorized (via Login)"});
@@ -20,7 +21,7 @@ export async function verifyToken(req: AuthenticatedRequest, res: Response, next
         if (err) {
             return res.status(401).send({error: "Invalid token"});
         }
-
+        console.log("user verified");
         req.user = decoded;
         next();
     })
