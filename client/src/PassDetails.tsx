@@ -7,6 +7,8 @@ import { useDeletePassword, useUpdatePassword } from './utils/addPassword';
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorPage } from './ErrorPage';
 import { useAuth } from './AuthProvider';
+import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
 
 export function PassDetails({passList, currentIndex, updatePassList, handleClose, handleError} : passDetailProps) {
     const [passInputType, setPassInputType] = useState<string>("password");
@@ -202,13 +204,57 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
               </div>
               <div className='container d-flex justify-content-center'>
                 <EditButton isEditing={isEditing} toggleEditPassword={toggleEditPassword} updatePassword={updatePassword}/>
-                <button type="button" className="btn btn-secondary mx-1" onClick={deletePassword}>Delete</button>
+                <DeleteButton passItem={passItem} updatePassList={updatePassList} closeOffCanvas={handleClose}/>
+                {/* <button type="button" className="btn btn-secondary mx-1" onClick={deletePassword}>Delete</button> */}
               </div>
             </form>
           </ErrorBoundary>
         </Offcanvas.Body>
       </>
     )
+}
+
+interface IDeletePassword {
+  passItem: PasswordListItem, 
+  updatePassList: (passItem: PasswordListItem, operation: string) => void,
+  closeOffCanvas: () => void
+}
+
+export function DeleteButton({passItem, updatePassList, closeOffCanvas}: IDeletePassword) {
+  const [show, setShow] = useState<boolean>(false);
+  const user = useAuth();
+
+  const handleShow = () => setShow(true);
+  const handleClose = () => setShow(false);
+
+  async function deletePassword() {
+    const deletedPassword = await useDeletePassword(passItem.id, user.jwt);
+
+    if (deletedPassword) {
+      updatePassList({...passItem}, "delete");
+      handleClose();
+      closeOffCanvas();
+    } else {
+      console.log("error deleting password");
+    }
+  }
+
+
+  return (
+    <>
+      <Button onClick={handleShow} variant='secondary'>Delete</Button>
+      <Modal show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Permanently Delete Password?</Modal.Title>
+        </Modal.Header>
+        <Modal.Footer>
+          <Button variant="danger" onClick={deletePassword}>Delete</Button>
+          <Button variant="dark" onClick={handleClose}>Cancel</Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+    
+  )
 }
 
 export function EditButton({isEditing, toggleEditPassword, updatePassword}: IEditButtonProps) {
