@@ -14,6 +14,7 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
     const [passInputType, setPassInputType] = useState<string>("password");
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [passItem, setPassItem] = useState<PasswordListItem>(passList[currentIndex]);
+    const [showPassword, setShowPassword] = useState<string>("Show");
     const user = useAuth();
     const methods = useForm({ criteriaMode: "all" });
     //const passItem = passList[currentIndex];
@@ -22,8 +23,10 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
     function handleShowPassword() {
       if (passInputType == "password") {
         setPassInputType("text");
+        setShowPassword("Hide");
       } else {
         setPassInputType("password");
+        setShowPassword("Show");
       }
     }
   
@@ -159,7 +162,7 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
                       ))
                     }
                   />
-                  <button type="button" className="btn btn-outline-secondary" onClick={handleShowPassword}>Show</button>
+                  <button type="button" className="btn btn-outline-secondary" onClick={handleShowPassword}>{showPassword}</button>
                 </div>
               </div>
               
