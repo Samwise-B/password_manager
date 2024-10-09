@@ -105,8 +105,9 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
             <FormProvider {...methods}>
             <form onSubmit={e => e.preventDefault()} className="container" noValidate>
               <input type="hidden" name="id" value={passItem.id}></input>
-              <EditInput 
-                value={passItem.email} 
+              <Input 
+                value={passItem.email}
+                placeholder='' 
                 label={"Email address"} 
                 type={"email"} 
                 id={"email"} 
@@ -117,8 +118,9 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
                 customValidate={validateUsernameAndEmail} 
                 handleChange={handleChange}
               />
-              <EditInput
-                value={passItem.username} 
+              <Input
+                value={passItem.username}
+                placeholder=''  
                 label={"Username"} 
                 type={"text"} 
                 id={"username"} 
@@ -130,7 +132,7 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
                 handleChange={handleChange}
               />
               <EditPassInput
-                value={passItem.password} 
+                value={passItem.password}  
                 label={"Password"} 
                 type={passInputType} 
                 id={"password"} 
@@ -143,8 +145,9 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
                 handleChange={handleChange}
                 toggleShowPassword={toggleShowPassword}
               />
-              <EditInput
-                value={passItem.url} 
+              <Input
+                value={passItem.url}
+                placeholder=''  
                 label={"Website URL"} 
                 type={"text"} 
                 id={"url"} 
@@ -167,8 +170,9 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
     )
 }
 
-interface IEditInputProps {
+interface IInputProps {
   value: string,
+  placeholder:string,
   label: string,
   type: string,
   id: string,
@@ -238,7 +242,7 @@ function EditPassInput({ value, label, type, id, pattern, isEditing, errorMessag
   );
 }
 
-function EditInput({ value, label, type, id, pattern, isEditing, errorMessage, maxLength, customValidate, handleChange }: IEditInputProps) {
+export function Input({ value, placeholder, label, type, id, pattern, isEditing, errorMessage, maxLength, customValidate, handleChange }: IInputProps) {
   const { register, formState: {errors} } = useFormContext();
 
   return (
@@ -251,6 +255,7 @@ function EditInput({ value, label, type, id, pattern, isEditing, errorMessage, m
         value={value}
         readOnly={!isEditing}
         disabled={!isEditing}
+        placeholder={placeholder}
         {...register(id, {
           onChange: handleChange,
           validate: () => customValidate(),
