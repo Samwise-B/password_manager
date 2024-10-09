@@ -41,17 +41,6 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
       console.log(passItem)
     }
 
-    async function deletePassword() {
-      const deletedPassword = await useDeletePassword(passItem.id, user.jwt);
-
-      if (deletedPassword) {
-        updatePassList({...passItem}, "delete");
-        handleClose();
-      } else {
-        console.log("error deleting password");
-      }
-    }
-
     const updatePassword = methods.handleSubmit(async data => {
       console.log("form data:", data);
       const updatedPassword = await useUpdatePassword({
@@ -205,7 +194,6 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
               <div className='container d-flex justify-content-center'>
                 <EditButton isEditing={isEditing} toggleEditPassword={toggleEditPassword} updatePassword={updatePassword}/>
                 <DeleteButton passItem={passItem} updatePassList={updatePassList} closeOffCanvas={handleClose}/>
-                {/* <button type="button" className="btn btn-secondary mx-1" onClick={deletePassword}>Delete</button> */}
               </div>
             </form>
           </ErrorBoundary>
