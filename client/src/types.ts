@@ -45,3 +45,8 @@ export interface passBankItemProps {
     passItem: PasswordListItem,
     onPassItemClick: (index: number) => void,
 }
+
+export interface EmptyPassListProps {
+    header: string,
+    description: string,
+}

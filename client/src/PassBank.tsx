@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base64ToUint8Array, deriveKey, decryptPassword } from "./utils/encryption";
 import { useAuth } from "./AuthProvider";
 import { LoadingAnimation } from "./LoadingAnimation";
-import { passBankProps, passBankItemProps, PasswordListItem } from "./types";
+import { passBankProps, passBankItemProps, PasswordListItem, EmptyPassListProps } from "./types";
 
 export function PassBank({passwordList, filterString, onPassItemClick, setPassList}: passBankProps) {
     const user = useAuth();
@@ -76,7 +76,18 @@ export function PassBank({passwordList, filterString, onPassItemClick, setPassLi
             return <LoadingAnimation/>
         }
         else if (passBankItems.length == 0) {
-            return <EmptyPassList/>
+            if (filterString == "") {
+                return <EmptyPassList 
+                        header={"No Passwords!"}
+                        description={"Your password list is empty, press the + in the top right to add a password."}
+                    />
+            } else {
+                return <EmptyPassList 
+                        header={"No Results"}
+                        description={"Your filter did not match any entries in your bank."}
+                    />
+            }
+            
         }
         else {
             return passItemsNode;
@@ -118,12 +129,12 @@ export function PassBankItem({passItem, index, onPassItemClick}: passBankItemPro
     )
 }
 
-function EmptyPassList() {
+function EmptyPassList({header, description}: EmptyPassListProps) {
     return (
         <div className="container py-3 text-light">
             <img src="../public/empty_list.svg"></img>
-            <h2>No Passwords!</h2>
-            <p>Your password list is empty, press the + in the top right to add a password.</p>
+            <h2>{header}</h2>
+            <p>{description}</p>
         </div>
     );
 }
