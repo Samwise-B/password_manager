@@ -14,6 +14,12 @@ export type EncryptedData = {
     ciphertext: Uint8Array
 }
 
+export interface passwordCreatorProps {
+    updatePasswordList: ({site_favicon, username, email, password, url}: PasswordListItem) => void,
+    handleClose: () => void,
+    handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void,
+  }
+
 export interface passDetailProps {
     passList: Array<PasswordListItem>,
     currentIndex: number,
