@@ -66,15 +66,27 @@ export function PassBank({passwordList, filterString, onPassItemClick, setPassLi
         return newFilteredPL;
       }
     }
-  
-    const passBankItems: React.ReactNode = filterPasswordList(filterString).map((passItem, index) =>
-      <PassBankItem passItem={passItem} key={passItem.id} index={index} onPassItemClick={onPassItemClick}/>
-    );
+
+    function renderBank() {
+        const passBankItems = filterPasswordList(filterString);
+        const passItemsNode: React.ReactNode = passBankItems.map((passItem, index) =>
+        <PassBankItem passItem={passItem} key={passItem.id} index={index} onPassItemClick={onPassItemClick}/>
+        );
+        if (isLoading) {
+            return <LoadingAnimation/>
+        }
+        else if (passBankItems.length == 0) {
+            return <EmptyPassList/>
+        }
+        else {
+            return passItemsNode;
+        }
+    }
   
     return (
       <div className='container-fluid px-0'>
         <div className='list-group'>
-          {(isLoading) ? <LoadingAnimation/> : passBankItems}
+          {renderBank()}
         </div>
       </div>
     )
@@ -95,13 +107,23 @@ export function PassBankItem({passItem, index, onPassItemClick}: passBankItemPro
             </div>
             <div className='col-sm-11'>
             <div className='row mx-auto justify-content-center'>
-                {passItem.url}
+                {passItem.email || passItem.username}
             </div>
             <div className='row justify-content-center'>
-                {passItem.email}
+                {passItem.url}
             </div>
             </div>
         </div>
         </button>
     )
+}
+
+function EmptyPassList() {
+    return (
+        <div className="container py-3 text-light">
+            <img src="../public/empty_list.svg"></img>
+            <h2>No Passwords!</h2>
+            <p>Your password list is empty, press the + in the top right to add a password.</p>
+        </div>
+    );
 }
