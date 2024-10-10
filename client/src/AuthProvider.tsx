@@ -61,7 +61,7 @@ export function AuthProvider({ children }: IAuthProps) {
                 headers: {
                     'Content-Type': "application/json",
                 },
-                body: JSON.stringify({ username, response: challengeString, challenge })
+                body: JSON.stringify({ username, response: challengeString })
             });
 
             if (!verifyResponse.ok) {

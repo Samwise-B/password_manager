@@ -107,31 +107,31 @@ app.post("/login-challenge", async (req: Request, res: Response) => {
     return res.status(404).json({ success: false, error: "Incorrect username or password."});
   }
 
+  // generate and store challenge temporarily
   const challenge = crypto.randomBytes(32).toString("base64");
-  
+  const challengeQuery = "UPDATE users SET challenge = $1 WHERE id=$2;"
+  await pool.query(challengeQuery, [challenge, users.rows[0].id]);
+
   const salt = users.rows[0].salt; // assumes unique usernames
 
   res.json({ success: true, challenge, salt });
 })
 
 app.post("/verify-challenge", async (req: Request, res: Response) => {
-  const { username, response, challenge } = req.body;
+  const { username, response } = req.body;
 
   const userQuery = "SELECT * FROM users WHERE username = $1;"
   const users = await pool.query(userQuery, [username])
   if (!users) {
-    return res.status(404).json({ error: "Incorrect username or password."});
+    return res.status(401).json({ error: "Incorrect username or password."});
   }
   
   const user = users.rows[0] // assumes unique user
-
   const storedHash = user.hashkey;
   const salt = user.salt;
+  const challenge = user.challenge;
   console.log(username, challenge, storedHash, salt)
-  //const challenge = req.body.challenge; // original challenge sent to client
 
-  //const keyMaterial = crypto.pbkdf2Sync(storedHash, salt, 100000, 32, 'sha256');
-  //console.log(crypto.createHmac("sha256", storedHash).digest("base64"));
   const hmac = crypto.createHmac('sha256', Buffer.from(storedHash, "base64"));
   //console.log("hmac storedHash:", hmac.digest("base64"));
   const expectedResponse = hmac.update(challenge).digest('base64');
