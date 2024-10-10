@@ -44,13 +44,14 @@ app.post('/addPassword', verifyToken, async (req: Request, res: Response) => {
     email,
     password,
     url,
+    label,
     salt,
     iv
   } = req.body;
   console.log(req.body);
   try {
-    const insertPassword = "INSERT INTO user_passwords (username, email, url, encrypted_password, salt, iv) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;";
-    const newPassQueryObj = await pool.query(insertPassword, [username, email, url, password, salt, iv]);
+    const insertPassword = "INSERT INTO user_passwords (username, email, url, label, encrypted_password, salt, iv) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;";
+    const newPassQueryObj = await pool.query(insertPassword, [username, email, url, label, password, salt, iv]);
     const passwordList = await newPassQueryObj.rows[0];
 
     return res.json(passwordList); 

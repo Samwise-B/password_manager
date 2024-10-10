@@ -30,8 +30,8 @@ interface OffCanvasProps {
   canvasContent: string; 
   passList: Array<PasswordListItem>; 
   currentIndex: number; 
-  UpdatePassList: ({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem, operation: string) => void; 
-  AddToPassList: ({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem) => void;
+  UpdatePassList: ({id, username, email, password, url, label, salt, iv}: PasswordListItem, operation: string) => void; 
+  AddToPassList: ({id, username, email, label, password, url, salt, iv}: PasswordListItem) => void;
   handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void;
 }
 
@@ -160,14 +160,14 @@ function Body() {
     setBodyContent("error")
   }
   
-  function AddToPasswordList({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem) {
+  function AddToPasswordList({id, username, email, label, password, url, salt, iv}: PasswordListItem) {
     // add password on backend
     const newArr = [...passwordList];
     newArr.push({
       id: id,
-      site_favicon: site_favicon,
       username: username,
       email: email,
+      label: label,
       password: password,
       url: url,
       salt: salt,
@@ -177,15 +177,15 @@ function Body() {
     setBodyContent("passbank");
   }
 
-  function UpdatePasswordList({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem, operation: string) {
+  function UpdatePasswordList({id, username, email, password, url, label, salt, iv}: PasswordListItem, operation: string) {
     if (operation == "update") {
       const newPassList = passwordList.map((passItem) => {
         if (passItem.id == id) {
             return {
               id: id,
-              site_favicon: site_favicon,
               username: username,
               email: email,
+              label: label,
               password: password,
               url: url,
               salt: salt,

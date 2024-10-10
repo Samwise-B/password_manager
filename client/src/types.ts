@@ -1,9 +1,9 @@
 export type PasswordListItem = {
     id: number;
-    site_favicon: string;
     username: string;
     email: string;
     url: string;
+    label: string;
     password: string;
     salt: string;
     iv: string;
@@ -15,7 +15,7 @@ export type EncryptedData = {
 }
 
 export interface passwordCreatorProps {
-    updatePasswordList: ({site_favicon, username, email, password, url}: PasswordListItem) => void,
+    updatePasswordList: ({ username, email, password, url}: PasswordListItem) => void,
     handleClose: () => void,
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void,
   }
@@ -23,7 +23,7 @@ export interface passwordCreatorProps {
 export interface passDetailProps {
     passList: Array<PasswordListItem>,
     currentIndex: number,
-    updatePassList: ({ id, site_favicon, username, email, password, url, salt, iv }: PasswordListItem, operation: string) => void,
+    updatePassList: ({ id, username, email, password, url, salt, iv }: PasswordListItem, operation: string) => void,
     handleClose: () => void,
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
 }
