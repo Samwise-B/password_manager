@@ -102,7 +102,8 @@ app.post("/login-challenge", async (req: Request, res: Response) => {
 
   const userQuery = "SELECT * FROM users WHERE username = $1;"
   const users = await pool.query(userQuery, [username])
-  if (!users) {
+  console.log(users)
+  if (users.rowCount == 0) {
     return res.status(404).json({ error: "User not found."});
   }
 

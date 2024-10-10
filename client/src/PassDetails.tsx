@@ -1,7 +1,7 @@
 import {passDetailProps, IEditButtonProps, PasswordListItem} from './types';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import { useState } from 'react';
-import { get, useForm, useFormContext, FormProvider } from "react-hook-form"
+import { useForm, useFormContext, FormProvider } from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
 import { useDeletePassword, useUpdatePassword } from './utils/addPassword';
 import { ErrorBoundary } from "react-error-boundary";
