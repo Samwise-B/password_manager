@@ -70,6 +70,7 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
           email: data.email,
           password: data.password,
           url: data.url,
+          label: data.label,
           jwt: user.jwt,
           handleError: handleError
         });
@@ -155,6 +156,19 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
                 maxLength={48}
                 isEditing={isEditing} 
                 errorMessage={"You must enter a valid web address (e.g. https://www.google.com)"} 
+                customValidate={() => true}
+                handleChange={handleChange}
+              />
+              <Input
+                label="Label (Optional)"
+                type="text"
+                id="label"
+                value={methods.watch("label") || ""}
+                maxLength={256}
+                isEditing={isEditing}
+                placeholder="enter a memorable label..."
+                pattern={/()/}
+                errorMessage=""
                 customValidate={() => true}
                 handleChange={handleChange}
               />

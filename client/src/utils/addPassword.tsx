@@ -17,6 +17,7 @@ export interface IUpdatePassword {
     username: string;
     email: string;
     url: string;
+    label: string;
     password: string;
     jwt: string;
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
@@ -74,7 +75,7 @@ export async function useAddPassword({username, email, password, url, label, jwt
     }
 }
 
-export async function useUpdatePassword({id, site_favicon, username, email, password, url, jwt}: IUpdatePassword) {
+export async function useUpdatePassword({id, site_favicon, username, email, password, url, label, jwt}: IUpdatePassword) {
     console.log({site_favicon, username, email, password, url});
     const masterKey = "secretpassword";
     // generate new encryption key & encrypt password
@@ -87,6 +88,7 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
             username: username,
             email: email,
             url: url,
+            label: label,
             password: arrayBufferToBase64(encryptedPassword.ciphertext),
             salt: salt,
             iv: arrayBufferToBase64(encryptedPassword.iv)

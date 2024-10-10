@@ -66,6 +66,7 @@ app.post("/updatePassword", verifyToken, async (req: Request, res: Response) => 
     email,
     password,
     url,
+    label,
     salt,
     iv,
     id
@@ -73,10 +74,10 @@ app.post("/updatePassword", verifyToken, async (req: Request, res: Response) => 
   console.log(req.body);
 
   const updateQuery = `UPDATE user_passwords 
-    SET username = $1, email = $2, encrypted_password = $3, url = $4, salt = $5, iv = $6
-    WHERE id = $7 RETURNING *;`
+    SET username = $1, email = $2, encrypted_password = $3, url = $4, label = $5, salt = $6, iv = $7
+    WHERE id = $8 RETURNING *;`
 
-  pool.query(updateQuery, [username, email, password, url, salt, iv, id]).then(updatedPasswords => {
+  pool.query(updateQuery, [username, email, password, url, label, salt, iv, id]).then(updatedPasswords => {
     return res.json(updatedPasswords.rows[0]);
   }).catch(err => {
     throw err;
