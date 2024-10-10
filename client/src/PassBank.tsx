@@ -121,7 +121,7 @@ export function PassBankItem({passItem, index, onPassItemClick}: passBankItemPro
                 {passItem.email || passItem.username}
             </div>
             <div className='row justify-content-center'>
-                {passItem.url}
+                {passItem.url || passItem.label}
             </div>
             </div>
         </div>
