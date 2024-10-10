@@ -104,14 +104,14 @@ app.post("/login-challenge", async (req: Request, res: Response) => {
   const users = await pool.query(userQuery, [username])
   console.log(users)
   if (users.rowCount == 0) {
-    return res.status(404).json({ error: "User not found."});
+    return res.status(404).json({ success: false, error: "Incorrect username or password."});
   }
 
   const challenge = crypto.randomBytes(32).toString("base64");
   
   const salt = users.rows[0].salt; // assumes unique usernames
 
-  res.json({ challenge, salt });
+  res.json({ success: true, challenge, salt });
 })
 
 app.post("/verify-challenge", async (req: Request, res: Response) => {
@@ -120,7 +120,7 @@ app.post("/verify-challenge", async (req: Request, res: Response) => {
   const userQuery = "SELECT * FROM users WHERE username = $1;"
   const users = await pool.query(userQuery, [username])
   if (!users) {
-    return res.status(404).json({ error: "User not found."});
+    return res.status(404).json({ error: "Incorrect username or password."});
   }
   
   const user = users.rows[0] // assumes unique user
@@ -148,7 +148,7 @@ app.post("/verify-challenge", async (req: Request, res: Response) => {
   } else {
     return res.status(401).json({ 
       success:false,
-      error: "Invalid Login"
+      error: "Incorrect username or password"
     });
   }
 }) 
@@ -158,16 +158,24 @@ app.post("/register", async (req: Request, res:Response) => {
   console.log(username, hashedKey, salt);
 
   try {
+    const usernameQuery = "SELECT * FROM users WHERE username = $1;"
+    const usernameResult = await pool.query(usernameQuery, [username]);
+
+    if (usernameResult.rows.length != 0) {
+      return res.status(400).json({
+        error: "Username already taken"
+      });
+    }
+
     const insertQuery = "INSERT INTO users (username, hashkey, salt) VALUES ($1, $2, $3);"
     await pool.query(insertQuery, [username, hashedKey, salt]);
 
     res.json({
       success: true,
-    })
+    });
   } catch (err) {
     res.status(400).json({
-      success: false,
-      error: "Unable to register",
+      error: "Unable to register, please try again later",
     })
   }
 });

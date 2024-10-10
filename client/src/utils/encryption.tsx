@@ -156,21 +156,3 @@ export async function generateChallengeResponse(password: string, challenge: str
     return arrayBufferToBase64(new Uint8Array(signature));
 }
 
-export async function registerUser(username: string, masterPassword: string) {
-    const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
-    const derivedKey = await deriveKeyLogin(masterPassword, salt);
-    const hashedKey = await hashDerivedKeyToBase64(derivedKey);
-    console.log(derivedKey, hashedKey);
-
-    const registerRes = await fetch("http://localhost:3001/register", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-            username: username,
-            hashedKey: hashedKey,
-            salt: salt,
-        }),
-    });
-}
