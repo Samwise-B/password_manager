@@ -114,13 +114,10 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
 
             return result;
         } else {
-            throw new Error(`${res.status}: Request to update password failed.`);
+            throw new Error(`${res.status}: Request to update password failed. Please try again later.`);
         }
     } catch (err) {
-        throw new Error(`
-            Request to update password failed.
-            ${err} 
-            `);
+        throw new Error(`${err} Request to update password failed. Please try again later.`);
     }
 };
 

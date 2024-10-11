@@ -4,6 +4,7 @@ import { Pool } from "pg";
 import dotenv from "dotenv";
 import cors from 'cors';
 import { verifyToken } from "./utils";
+import { AuthenticatedRequest } from "./utils";
 
 const corsOptions = {
   origin: ["http://localhost:8080", "http://localhost:5432"],
@@ -20,6 +21,7 @@ const jwt = require('jsonwebtoken');
 app.use(cors(corsOptions));
 app.use(express.json())
 
+
 const pool = new Pool({
   user: process.env.POSTGRES_USER,
   host: process.env.POSTGRES_HOST,
@@ -28,39 +30,46 @@ const pool = new Pool({
   port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT): undefined,
 })
 
-app.get('/getPasswords', verifyToken, async (req: Request, res: Response) => {
+app.get('/getPasswords', verifyToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const result = await pool.query("SELECT * FROM user_passwords ORDER BY id ASC");
+    const userId = req.user
+    console.log(userId);
+    const passQuery = "SELECT * FROM user_passwords WHERE user_id = $1 ORDER BY id ASC"
+    const result = await pool.query(passQuery, [userId]);
     const passwords = result.rows;
     return res.json(passwords);
   } catch (err) {
+    res.status(500).json({error: "Unable to fetch passwords. Please try again later"});
     throw err;
   }
 });
 
-app.post('/addPassword', verifyToken, async (req: Request, res: Response) => {
-  const {
-    username,
-    email,
-    password,
-    url,
-    label,
-    salt,
-    iv
-  } = req.body;
-  console.log(req.body);
+app.post('/addPassword', verifyToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const insertPassword = "INSERT INTO user_passwords (username, email, url, label, encrypted_password, salt, iv) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;";
-    const newPassQueryObj = await pool.query(insertPassword, [username, email, url, label, password, salt, iv]);
+    const {
+      username,
+      email,
+      password,
+      url,
+      label,
+      salt,
+      iv
+    } = req.body;
+    const userId = req.user;
+    console.log(userId);
+
+    const insertPassword = "INSERT INTO user_passwords (user_id, username, email, url, label, encrypted_password, salt, iv) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;";
+    const newPassQueryObj = await pool.query(insertPassword, [userId, username, email, url, label, password, salt, iv]);
     const passwordList = await newPassQueryObj.rows[0];
 
     return res.json(passwordList); 
   } catch (err) {
-    throw err; 
+    console.log(`Unable to add password: ${err}`);
+    return res.status(500).json({error: "Unable to add password. Please try again later"}) 
   }
 })
  
-app.post("/updatePassword", verifyToken, async (req: Request, res: Response) => {
+app.post("/updatePassword", verifyToken, async (req: AuthenticatedRequest, res: Response) => {
   const {
     username,
     email,
@@ -73,28 +82,34 @@ app.post("/updatePassword", verifyToken, async (req: Request, res: Response) => 
   } = req.body;
   console.log(req.body);
 
-  const updateQuery = `UPDATE user_passwords 
-    SET username = $1, email = $2, encrypted_password = $3, url = $4, label = $5, salt = $6, iv = $7
-    WHERE id = $8 RETURNING *;`
+  const userId = req.user;
 
-  pool.query(updateQuery, [username, email, password, url, label, salt, iv, id]).then(updatedPasswords => {
+  const updateQuery = `UPDATE user_passwords 
+    SET username = $1, email = $2, encrypted_password = $3, 
+      url = $4, label = $5, salt = $6, iv = $7, last_modified = CURRENT_TIMESTAMP
+    WHERE id = $8 AND user_id = $9 RETURNING *;`
+
+  pool.query(updateQuery, [username, email, password, url, label, salt, iv, id, userId]).then(updatedPasswords => {
     return res.json(updatedPasswords.rows[0]);
   }).catch(err => {
-    throw err;
+    console.log(`${err}: Unable to update password`);
+    return res.status(500).json({error: err.message})
   })
 });
 
-app.post("/deletePassword", verifyToken, async (req: Request, res: Response) => {
-  const { id } = req.body;
+app.post("/deletePassword", verifyToken, async (req: AuthenticatedRequest, res: Response) => {
+  const passId = req.body.id;
+  const userId = req.user;
 
-  const deleteQuery = `DELETE FROM user_passwords WHERE id = $1 RETURNING *;`
+  const deleteQuery = `DELETE FROM user_passwords WHERE id = $1 AND user_id = $2 RETURNING *;`
 
-  pool.query(deleteQuery, [id]).then(deletedPasswords => {
+  pool.query(deleteQuery, [passId, userId]).then(deletedPasswords => {
     if (deletedPasswords) {
       console.log('Deleted row:', deletedPasswords.rows[0]);
       return res.json(deletedPasswords.rows[0]);
     } else {
-      console.log('No row with that id');
+      console.log('No password with that id');
+      return res.status(400).json({error: "No id associated with that user"})
     }
   })
 });
@@ -141,6 +156,7 @@ app.post("/verify-challenge", async (req: Request, res: Response) => {
 
   if (expectedResponse === response) {
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '14d' });
+    console.log("signing for:", user.id)
 
     return res.json({
       success: true,
