@@ -12,6 +12,22 @@ import { PassBank } from './PassBank';
 import { PasswordCreator } from './PasswordCreator';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import classNames from "classnames";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+export const endpoints = {
+  getList: process.env.REACT_APP_API_GET_LIST_ENDPOINT,
+  addPass: process.env.REACT_APP_API_ADD_PASS_ENDPOINT,
+  updatePass: process.env.REACT_APP_API_UPDATE_PASS_ENDPOINT,
+  deletePass: process.env.REACT_APP_API_DELETE_PASS_ENDPOINT,
+  loginChallenge: process.env.REACT_APP_API_LOGIN_CHALLENGE_ENDPOINT,
+  verifyChallenge: process.env.REACT_APP_API_LOGIN_VERIFY_ENDPOINT,
+  register: process.env.REACT_APP_API_REGISTER_ENDPOINT,
+  logout: process.env.REACT_APP_API_LOGOUT_ENDPOINT,
+}
+export const apiHost = process.env.REACT_APP_API_HOST;
+export const apiPort = process.env.REACT_APP_API_PORT;
 
 
 interface navigationProps {
@@ -19,9 +35,6 @@ interface navigationProps {
   onBankClick: () => void,
   onNewPasswordClick: () => void
 }
-
-
-
 
 interface OffCanvasProps {
   //renderCanvasContent: () => React.ReactNode;

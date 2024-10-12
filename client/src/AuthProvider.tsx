@@ -1,6 +1,7 @@
 import {useContext, createContext, useState, ReactNode} from "react";
 import { generateChallengeResponse } from "./utils/encryption";
 import { registerUser } from "./utils/register";
+import { apiHost, apiPort, endpoints } from "./App";
 
 interface IAuthProvider {
     user: string | null,
@@ -38,7 +39,7 @@ export function AuthProvider({ children }: IAuthProps) {
         const password = data.password;
 
         try {
-            const challengeResponse = await fetch("http://localhost:3001/login-challenge", {
+            const challengeResponse = await fetch(`http://${apiHost}:${apiPort}/${endpoints.loginChallenge}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: IAuthProps) {
             const challengeString = await generateChallengeResponse(password, challenge, salt);
             console.log(username, challengeString, challenge);
 
-            const verifyResponse = await fetch("http://localhost:3001/verify-challenge", {
+            const verifyResponse = await fetch(`http://${apiHost}:${apiPort}/${endpoints.verifyChallenge}`, {
                 method: "POST",
                 headers: {
                     'Content-Type': "application/json",

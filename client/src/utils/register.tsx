@@ -1,5 +1,6 @@
 import { arrayBufferToBase64, deriveKeyLogin, hashDerivedKeyToBase64 } from "./encryption";
 import { useAuth } from "../AuthProvider";
+import { apiHost, apiPort, endpoints } from "../App";
 
 export async function registerUser(username: string, masterPassword: string) {
     const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
@@ -8,7 +9,7 @@ export async function registerUser(username: string, masterPassword: string) {
     console.log(derivedKey, hashedKey);
 
     try {
-        const regResponse = await fetch("http://localhost:3001/register", {
+        const regResponse = await fetch(`http://${apiHost}:${apiPort}/${endpoints.register}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { PasswordListItem } from "../types";
 import { deriveKey, encryptPassword, arrayBufferToBase64 } from "./encryption";
+import { apiHost, apiPort, endpoints } from "../App";
 
 export interface IAddPassword {
     username: string;
@@ -46,7 +47,7 @@ export async function useAddPassword({username, email, password, url, label, jwt
             iv: arrayBufferToBase64(encryptedPassword.iv)
         };
 
-        const res = await fetch("http://localhost:3001/addPassword", {
+        const res = await fetch(`http://${apiHost}:${apiPort}/${endpoints.addPass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
@@ -94,7 +95,7 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
             iv: arrayBufferToBase64(encryptedPassword.iv)
         };
 
-        const res = await fetch("http://localhost:3001/updatePassword", {
+        const res = await fetch(`http://${apiHost}:${apiPort}/${endpoints.updatePass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
@@ -124,7 +125,7 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
 export async function useDeletePassword(id: number, jwt: string) {
     console.log("deleting:", id);
     try {
-        const res = await fetch("http://localhost:3001/deletePassword", {
+        const res = await fetch(`http://${apiHost}:${apiPort}/${endpoints.deletePass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',

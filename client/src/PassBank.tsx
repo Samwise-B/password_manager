@@ -3,6 +3,7 @@ import { base64ToUint8Array, deriveKey, decryptPassword } from "./utils/encrypti
 import { useAuth } from "./AuthProvider";
 import { LoadingAnimation } from "./LoadingAnimation";
 import { passBankProps, passBankItemProps, PasswordListItem, EmptyPassListProps } from "./types";
+import { apiHost, apiPort, endpoints } from "./App";
 
 export function PassBank({passwordList, filterString, onPassItemClick, setPassList}: passBankProps) {
     const user = useAuth();
@@ -11,7 +12,7 @@ export function PassBank({passwordList, filterString, onPassItemClick, setPassLi
     useEffect(() => {
       const fetchPassList = async () => {
         console.log(user);
-        fetch('http://localhost:3001/getPasswords', {
+        fetch(`http://${apiHost}:${apiPort}/${endpoints.getList}`, {
           headers: {
             "Authorization": user.jwt,
           }

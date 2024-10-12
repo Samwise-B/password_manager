@@ -18,6 +18,19 @@ const port = process.env.PORT || 5000; // You can choose any port
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+
+const endpoints = {
+  getList: process.env.API_GET_LIST_ENDPOINT,
+  addPass: process.env.API_ADD_PASS_ENDPOINT,
+  updatePass: process.env.API_UPDATE_PASS_ENDPOINT,
+  deletePass: process.env.API_DELETE_PASS_ENDPOINT,
+  loginChallenge: process.env.API_LOGIN_CHALLENGE_ENDPOINT,
+  verifyChallenge: process.env.API_LOGIN_VERIFY_ENDPOINT,
+  register: process.env.API_REGISTER_ENDPOINT,
+  logout: process.env.API_LOGOUT_ENDPOINT,
+
+}
+
 app.use(cors(corsOptions));
 app.use(express.json())
 
@@ -30,7 +43,7 @@ const pool = new Pool({
   port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT): undefined,
 })
 
-app.get('/getPasswords', verifyToken, async (req: AuthenticatedRequest, res: Response) => {
+app.get(`/${endpoints.getList}`, verifyToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user
     console.log(userId);
@@ -44,7 +57,7 @@ app.get('/getPasswords', verifyToken, async (req: AuthenticatedRequest, res: Res
   }
 });
 
-app.post('/addPassword', verifyToken, async (req: AuthenticatedRequest, res: Response) => {
+app.post(`/${endpoints.addPass}`, verifyToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const {
       username,
@@ -69,7 +82,7 @@ app.post('/addPassword', verifyToken, async (req: AuthenticatedRequest, res: Res
   }
 })
  
-app.post("/updatePassword", verifyToken, async (req: AuthenticatedRequest, res: Response) => {
+app.post(`/${endpoints.updatePass}`, verifyToken, async (req: AuthenticatedRequest, res: Response) => {
   const {
     username,
     email,
@@ -97,7 +110,7 @@ app.post("/updatePassword", verifyToken, async (req: AuthenticatedRequest, res: 
   })
 });
 
-app.post("/deletePassword", verifyToken, async (req: AuthenticatedRequest, res: Response) => {
+app.post(`/${endpoints.deletePass}`, verifyToken, async (req: AuthenticatedRequest, res: Response) => {
   const passId = req.body.id;
   const userId = req.user;
 
@@ -114,7 +127,7 @@ app.post("/deletePassword", verifyToken, async (req: AuthenticatedRequest, res: 
   })
 });
 
-app.post("/login-challenge", async (req: Request, res: Response) => {
+app.post(`/${endpoints.loginChallenge}`, async (req: Request, res: Response) => {
   const { username } = req.body;
 
   const userQuery = "SELECT * FROM users WHERE username = $1;"
@@ -134,7 +147,7 @@ app.post("/login-challenge", async (req: Request, res: Response) => {
   res.json({ success: true, challenge, salt });
 })
 
-app.post("/verify-challenge", async (req: Request, res: Response) => {
+app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response) => {
   const { username, response } = req.body;
 
   const userQuery = "SELECT * FROM users WHERE username = $1;"
@@ -171,7 +184,7 @@ app.post("/verify-challenge", async (req: Request, res: Response) => {
   }
 }) 
 
-app.post("/register", async (req: Request, res:Response) => {
+app.post(`/${endpoints.register}`, async (req: Request, res:Response) => {
   const { username, hashedKey, salt } = req.body;
   console.log(username, hashedKey, salt);
 
