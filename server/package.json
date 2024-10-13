@@ -2,11 +2,11 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/server.ts",
   "scripts": {
     "build": "rimraff ./build && tsc",
     "start:": "npm run build && node build/server.js",
-    "start:dev": "npx nodemon"
+    "dev": "npx nodemon"
   },
   "keywords": [],
   "author": "",

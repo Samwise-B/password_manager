@@ -7,7 +7,7 @@ import { verifyToken } from "./utils";
 import { AuthenticatedRequest } from "./utils";
 
 const corsOptions = {
-  origin: ["http://localhost:8080", "http://localhost:5432"],
+  origin: ["http://localhost:3000", "http://localhost:5432"],
   optionsSuccessStatus:200
 }
 // add .env configuration
@@ -28,8 +28,9 @@ const endpoints = {
   verifyChallenge: process.env.API_LOGIN_VERIFY_ENDPOINT,
   register: process.env.API_REGISTER_ENDPOINT,
   logout: process.env.API_LOGOUT_ENDPOINT,
-
 }
+
+console.log(endpoints);
 
 app.use(cors(corsOptions));
 app.use(express.json())
@@ -37,7 +38,7 @@ app.use(express.json())
 
 const pool = new Pool({
   user: process.env.POSTGRES_USER,
-  host: process.env.POSTGRES_HOST,
+  host: process.env.PGHOST,
   database: process.env.POSTGRES_DB,
   password: process.env.POSTGRES_PASSWORD,
   port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT): undefined,
@@ -215,7 +216,7 @@ app.listen(port, () => {
   console.log(`Server is running on port number ${port}`);
   console.log({
     user: process.env.POSTGRES_USER,
-    host: process.env.POSTGRES_HOST,
+    host: process.env.PGHOST,
     database: process.env.POSTGRES_DB,
     password: process.env.POSTGRES_PASSWORD,
     port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT): undefined,
