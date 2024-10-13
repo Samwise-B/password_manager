@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { PasswordListItem } from "../types";
 import { deriveKey, encryptPassword, arrayBufferToBase64 } from "./encryption";
+import { apiHost, apiPort, endpoints } from "../App";
 
 export interface IAddPassword {
-    site_favicon: string;
     username: string;
     email: string;
     url: string;
+    label: string;
     password: string;
     jwt: string;
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void;
@@ -17,6 +18,7 @@ export interface IUpdatePassword {
     username: string;
     email: string;
     url: string;
+    label: string;
     password: string;
     jwt: string;
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
@@ -27,8 +29,8 @@ export interface IDeletePassword {
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
 }
 
-export async function useAddPassword({site_favicon, username, email, password, url, jwt}: IAddPassword) {
-    console.log({site_favicon, username, email, password, url});
+export async function useAddPassword({username, email, password, url, label, jwt}: IAddPassword) {
+    console.log({username, email, password, url, label});
     const masterKey = "secretpassword";
     const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
 
@@ -39,12 +41,13 @@ export async function useAddPassword({site_favicon, username, email, password, u
             username: username,
             email: email,
             url: url,
+            label: label,
             password: arrayBufferToBase64(encryptedPassword.ciphertext),
             salt: salt,
             iv: arrayBufferToBase64(encryptedPassword.iv)
         };
 
-        const res = await fetch("http://localhost:3001/addPassword", {
+        const res = await fetch(`http://${apiHost}:${apiPort}/${endpoints.addPass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
@@ -73,7 +76,7 @@ export async function useAddPassword({site_favicon, username, email, password, u
     }
 }
 
-export async function useUpdatePassword({id, site_favicon, username, email, password, url, jwt}: IUpdatePassword) {
+export async function useUpdatePassword({id, site_favicon, username, email, password, url, label, jwt}: IUpdatePassword) {
     console.log({site_favicon, username, email, password, url});
     const masterKey = "secretpassword";
     // generate new encryption key & encrypt password
@@ -86,12 +89,13 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
             username: username,
             email: email,
             url: url,
+            label: label,
             password: arrayBufferToBase64(encryptedPassword.ciphertext),
             salt: salt,
             iv: arrayBufferToBase64(encryptedPassword.iv)
         };
 
-        const res = await fetch("http://localhost:3001/updatePassword", {
+        const res = await fetch(`http://${apiHost}:${apiPort}/${endpoints.updatePass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
@@ -111,20 +115,17 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
 
             return result;
         } else {
-            throw new Error(`${res.status}: Request to update password failed.`);
+            throw new Error(`${res.status}: Request to update password failed. Please try again later.`);
         }
     } catch (err) {
-        throw new Error(`
-            Request to update password failed.
-            ${err} 
-            `);
+        throw new Error(`${err} Request to update password failed. Please try again later.`);
     }
 };
 
 export async function useDeletePassword(id: number, jwt: string) {
     console.log("deleting:", id);
     try {
-        const res = await fetch("http://localhost:3001/deletePassword", {
+        const res = await fetch(`http://${apiHost}:${apiPort}/${endpoints.deletePass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',

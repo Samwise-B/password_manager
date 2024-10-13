@@ -5,7 +5,7 @@ import { error } from "console";
 
 dotenv.config();
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
     user?: string | JwtPayload;
 }
 
@@ -21,8 +21,9 @@ export async function verifyToken(req: AuthenticatedRequest, res: Response, next
         if (err) {
             return res.status(401).send({error: "Invalid token"});
         }
-        console.log("user verified");
-        req.user = decoded;
+
+        const decodedToken = decoded as JwtPayload;
+        req.user = decodedToken.userId;
         next();
     })
 }

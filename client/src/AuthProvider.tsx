@@ -1,9 +1,12 @@
 import {useContext, createContext, useState, ReactNode} from "react";
 import { generateChallengeResponse } from "./utils/encryption";
+import { registerUser } from "./utils/register";
+import { apiHost, apiPort, endpoints } from "./App";
 
 interface IAuthProvider {
     user: string | null,
     jwt: string,
+    err: string | null,
     login: () => void,
     logout: () => void
 }
@@ -20,19 +23,23 @@ interface ILoginForm {
 const AuthContext = createContext({
     user: null,
     jwt: "",
-    login: (data: ILoginForm) => {},
-    logout: () => {}
+    login: async (data: ILoginForm) => {return ""},
+    regUser: async (data: ILoginForm) => {return ""},
+    logout: async () => {}
 });
 
 export function AuthProvider({ children }: IAuthProps) {
     const [user, setUser] = useState(null);
     const [jwt, setJwt] = useState(localStorage.getItem("site") || "");
+    //const [err, setErr] = useState<string>("");
 
-    async function login(data: ILoginForm) {
+
+    async function login(data: ILoginForm): Promise<string> {
+        const username = data.username;
+        const password = data.password;
+
         try {
-            const username = data.username;
-            const password = data.password;
-            const challengeResponse = await fetch("http://localhost:3001/login-challenge", {
+            const challengeResponse = await fetch(`http://${apiHost}:${apiPort}/${endpoints.loginChallenge}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -40,31 +47,103 @@ export function AuthProvider({ children }: IAuthProps) {
                 body: JSON.stringify({ username }),
             });
 
-            const { challenge, salt } = await challengeResponse.json();
-            
-            const response = await generateChallengeResponse(password, challenge, salt);
+            if (!challengeResponse.ok) {
+                const error = await challengeResponse.json();
+                throw new Error(error.error);
+            }
 
-            const verifyResponse = await fetch("http://localhost:3001/verify-challenge", {
+            const { challenge, salt } = await challengeResponse.json();
+
+            const challengeString = await generateChallengeResponse(password, challenge, salt);
+            console.log(username, challengeString, challenge);
+
+            const verifyResponse = await fetch(`http://${apiHost}:${apiPort}/${endpoints.verifyChallenge}`, {
                 method: "POST",
                 headers: {
                     'Content-Type': "application/json",
                 },
-                body: JSON.stringify({ username, response, challenge })
+                body: JSON.stringify({ username, response: challengeString })
             });
+
+            if (!verifyResponse.ok) {
+                const error = await verifyResponse.json();
+                throw new Error(error.error);
+            }
 
             const result = await verifyResponse.json();
 
             if (result.success) {
-                console.log("Successful Authentication!", result.user, result.token);
+                //console.log("Successful Authentication!", result.user, result.token);
                 setUser(result.user);
                 setJwt(result.token);
-                localStorage.setItem("site", result.token)
-                return;
+                localStorage.setItem("site", result.token);
+                return "";
             }
-            throw new Error(result.message);
-        } catch (err) {
-            console.error(err);
+            throw new Error(result.error);
+        } catch (err: any) {
+            return err.message;
         }
+        // return fetch("http://localhost:3001/login-challenge", {
+        //     method: "POST",
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({ username }),
+        // }).then(challengeResponse => {
+        //     // Check if response is OK
+        //     // if (!challengeResponse.ok) {
+        //     //     return Promise.reject(challengeResponse.json());
+        //     // }
+        //     return challengeResponse.json();
+        // }).then(challengeObj => {
+        //     if (!challengeObj.success) {
+        //         throw new Error(challengeObj);
+        //     }
+        //     return challengeObj;
+        // })
+        // .then(({challenge, salt}) => {
+        //     //const { challenge, salt } = challengeResponse.json();
+        //     return generateChallengeResponse(password, challenge, salt).then(response => ({
+        //         response,
+        //         challenge,
+        //     }));
+        // }).then(({response, challenge}) => {
+        //     return fetch("http://localhost:3001/verify-challenge", {
+        //         method: "POST",
+        //         headers: {
+        //             'Content-Type': "application/json",
+        //         },
+        //         body: JSON.stringify({ username, response, challenge })
+        //     });
+        // })
+        // .then(verifyResponse => {
+        //     if (!verifyResponse.ok) {
+        //         return Promise.reject(verifyResponse.json());
+        //     }
+        //     return verifyResponse.json();
+        // })
+        // .then(result => {
+        //     if (result.success) {
+        //         console.log("Successful Authentication!", result.user, result.token);
+        //         setUser(result.user);
+        //         setJwt(result.token);
+        //         localStorage.setItem("site", result.token);
+        //         return {success: true, error: ""};
+        //     }
+        //     return(result);
+        // })
+        // .catch(err => {
+        //     console.error("Error:", err.message);
+        //     setErr(err.message);
+        //     return {success: false, error: err.message};
+        //     //return err.message;
+        // });
+    }
+
+    async function regUser(data: ILoginForm) {
+        const username = data.username;
+        const password = data.password;
+        return registerUser(username, password);
     }
 
     async function logout() {
@@ -74,7 +153,7 @@ export function AuthProvider({ children }: IAuthProps) {
     }
 
     return (
-        <AuthContext.Provider value={{user, jwt, login, logout}}>
+        <AuthContext.Provider value={{user, jwt, login, regUser, logout}}>
             {children}
         </AuthContext.Provider>
     );

@@ -3,82 +3,65 @@ import { useAuth } from "./AuthProvider";
 import { FormEventHandler } from "react";
 import { useForm } from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
-import { registerUser } from "./utils/encryption";
+import { Input } from "./PassDetails";
 
 
-export function Login() {
+export function Login() {   
     const auth = useAuth();
+    const [err, setErr] = useState<string>(""); 
     const methods = useForm({ criteriaMode: "all" });
 
     const handleLogin = methods.handleSubmit(async data => {
-    if (data.username !== "" && data.password !== "") {
-        //dispatch action from hooks
-        auth.login({
+    //dispatch action from hooks
+    if (data.username && data.password) {
+        const res: string = await auth.login({
             username: data.username,
             password: data.password
         });
-        return;
+        setErr(res);
     }
-    console.log("please provide a valid input");
     });
 
     const handleRegister = methods.handleSubmit(async data => {
         console.log(data);
-        registerUser(data.username, data.password);
+        if (data.username && data.password) {
+            const res: string = await auth.regUser({
+                username: data.username,
+                password: data.password
+            });
+            setErr(res);
+        }
     })
 
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setErr("");
+    }
+
     return (
-        <div className="container">
+        <div className="container w-25 login-container">
             <form onSubmit={e => e.preventDefault()} className="container  text-light" noValidate>
-                <div className="container mb-3">
+                <div className="container mb-3"> 
                 <label htmlFor="username" className="form-label">Username</label>
                 <input type="text" className="form-control" id="username" 
-                {...methods.register("username", {
-                    required: {
-                    value: true,
-                    message: "A username is required"
-                    },
-                    pattern: {
-                    value: /(?=.{8,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])/,
-                    message: "You must enter a username between 8 and 20 characters"
-                    }
-                })}></input>
-                <ErrorMessage
-                    errors={methods.formState.errors}
-                    name={"username"}
-                    render={({ messages }) => 
-                    messages &&
-                    Object.entries(messages).map(([type, message]) => (
-                        <p key={type} className='text-danger'>{message}</p>
-                    ))
-                    }
-                />
+                    {...methods.register("username", {
+                        onChange: handleChange,
+                    })}>
+                </input>
                 </div>
                 <div className='container mb-3'>
                 <label htmlFor="password" className="form-label">Password</label>
-                <div className="container-fluid input-group mb-3 px-0">
-                    <input type="text" className="form-control" id="password" 
-                    {...methods.register("password", {
-                    required: {
-                        value: true,
-                        message: "A password is required"
-                    },
-                    })}></input>
-                    <ErrorMessage
-                    errors={methods.formState.errors}
-                    name={"password"}
-                    render={({ messages }) => 
-                        messages &&
-                        Object.entries(messages).map(([type, message]) => (
-                        <p key={type} className='text-danger'>{message}</p>
-                        ))
-                    }
-                    />
+                <div className="container-fluid input-group px-0">
+                    <input type="password" className="form-control" id="password" 
+                        {...methods.register("password", {
+                            onChange: handleChange,
+                        })}>
+                    </input>
                 </div>
                 </div>
+                <div className="text-danger pb-3">{err}</div>
                 <div className='container d-flex justify-content-center'>
-                <button type="button" className="btn btn-primary mx-1" onClick={handleLogin}>Login</button>
-                <button type="button"className="btn btn-primary mx-1" onClick={handleRegister}>Register</button>
+                <button type="button" className="btn btn-secondary mx-1" onClick={handleLogin}>Login</button>
+                <button type="button"className="btn btn-secondary mx-1" onClick={handleRegister}>Register</button>
                 </div>
             </form>
         </div>

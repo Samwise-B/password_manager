@@ -1,66 +1,36 @@
-import { HTMLInputTypeAttribute, useEffect, useState, createContext, useContext, Children } from 'react';
+import { useState } from 'react';
 import './css/App.css';
 import './scss/styles.scss';
 import Generator from './Generator';
-import { PassDetails, EditButton } from './PassDetails';
-import { deriveKey, encryptPassword, decryptPassword, base64ToUint8Array } from './utils/encryption';
-import {useForm, FormProvider, useFormContext } from "react-hook-form";
-import { ErrorMessage } from "@hookform/error-message";
+import { PassDetails } from './PassDetails';
 import Offcanvas from 'react-bootstrap/Offcanvas';
-import { useAddPassword } from './utils/addPassword';
-import { PasswordItem, PasswordListItem } from './types';
+import { PasswordListItem } from './types';
 import { AuthProvider, useAuth } from "./AuthProvider";
 import { Login } from './Login';
 import { ErrorPage } from './ErrorPage';
-import Spinner from 'react-bootstrap/Spinner';
+import { PassBank } from './PassBank';
+import { PasswordCreator } from './PasswordCreator';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import classNames from "classnames";
+
+export const endpoints = {
+  getList: import.meta.env.VITE_API_GET_LIST,
+  addPass: import.meta.env.VITE_API_ADD_PASS,
+  updatePass: import.meta.env.VITE_API_UPDATE_PASS,
+  deletePass: import.meta.env.VITE_API_DELETE_PASS,
+  loginChallenge: import.meta.env.VITE_API_LOGIN_CHALLENGE,
+  verifyChallenge: import.meta.env.VITE_API_LOGIN_VERIFY,
+  register: import.meta.env.VITE_API_REGISTER,
+  logout: import.meta.env.VITE_API_LOGOUT,
+}
+export const apiHost = import.meta.env.VITE_API_HOST;
+export const apiPort = import.meta.env.VITE_API_PORT;
 
 
 interface navigationProps {
   onGeneratorClick: () => void,
   onBankClick: () => void,
   onNewPasswordClick: () => void
-}
-
-interface IInputProps {
-  label: string,
-  type: HTMLInputTypeAttribute, 
-  id: string, 
-  placeholder: string,
-  pattern: RegExp,
-  errorMessage: string
-}
-
-interface IFromInputs {
-  username: string,
-  email: string,
-  url: string,
-
-}
-
-interface IErrorProps {
-  errorMessage: string
-}
-
-interface passwordCreatorProps {
-  updatePasswordList: ({site_favicon, username, email, password, url}: PasswordListItem) => void,
-  handleClose: () => void,
-  handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void,
-}
-
-interface passBankProps {
-  passwordList: Array<PasswordListItem>,
-  filterString: string,
-  onPassItemClick: (index: number) => void,
-  setPassList: (passList: Array<PasswordListItem>) => void,
-}
-
-interface passBankItemProps {
-  key: number,
-  index: number,
-  passItem: PasswordListItem,
-  onPassItemClick: (index: number) => void,
 }
 
 interface OffCanvasProps {
@@ -70,8 +40,8 @@ interface OffCanvasProps {
   canvasContent: string; 
   passList: Array<PasswordListItem>; 
   currentIndex: number; 
-  UpdatePassList: ({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem, operation: string) => void; 
-  AddToPassList: ({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem) => void;
+  UpdatePassList: ({id, username, email, password, url, label, salt, iv}: PasswordListItem, operation: string) => void; 
+  AddToPassList: ({id, username, email, label, password, url, salt, iv}: PasswordListItem) => void;
   handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void;
 }
 
@@ -145,228 +115,13 @@ function Search({filterPL}: ISearchBarProps) {
   )
 }
 
-function LoadingAnimation() {
-  return (
-    <div className='container-fluid'>
-      <Spinner animation='border' variant='light'/>
-    </div>
-  )
-}
-
-function PassBankItem({passItem, index, onPassItemClick}: passBankItemProps) {
-
-  function handleClick() {
-    onPassItemClick(index);
-  }
-
-  return (
-    <button type="button" className="list-group-item list-group-item-action rounded-0 bg-dark border-dark pass-item" onClick={handleClick} data-bs-toggle="offcanvas" data-bs-target="#offCanvasWindow" aria-current="true">
-      <div className="row">
-        <div className="col-sm-1 fw-bold">
-          <i className="bi bi-key-fill h1"></i>
-        </div>
-        <div className='col-sm-11'>
-          <div className='row mx-auto justify-content-center'>
-            {passItem.url}
-          </div>
-          <div className='row justify-content-center'>
-            {passItem.email}
-          </div>
-        </div>
-      </div>
-    </button>
-)
-}
-
-function PassBank({passwordList, filterString, onPassItemClick, setPassList}: passBankProps) {
-  const user = useAuth();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const fetchPassList = async () => {
-      console.log(user);
-      fetch('http://localhost:3001/getPasswords', {
-        headers: {
-          "Authorization": user.jwt,
-        }
-      }).then(res => {
-        return res.json();
-      }).then(async passList => {
-        //console.log(passList);
-        const masterKey = "secretpassword";
-        for (let i=0; i < passList.length; i++) {
-          const encryptedData = {
-            iv: base64ToUint8Array(passList[i].iv),
-            ciphertext: base64ToUint8Array(passList[i].encrypted_password)
-          }
-          //console.log(encryptedData)
-          const password = await deriveKey(masterKey, passList[i].salt).then(key => {
-            //console.log("encryption key", key);
-            return decryptPassword(encryptedData, key);
-          });
-          passList[i]['password'] = password;
-        }
-        console.log(passList);
-        setPassList(passList);
-        setIsLoading(false);
-      }).catch(err => {
-        console.log("Error fetching password list: ",err);
-        setPassList([])
-      })
-    };
-
-    fetchPassList();
-  }, [])
-
-  function filterPasswordList(substring: string) {
-    let newFilteredPL: Array<PasswordListItem> = [];
-
-    if (substring == "") {
-      return passwordList;
-    } else {
-      for (let passItem of passwordList) {
-        let email = passItem.email.toLowerCase();
-        let username = passItem.username.toLowerCase();
-        let url = passItem.url.toLowerCase();
-  
-        if (email.includes(substring)
-          || username.includes(substring)
-          || url.includes(substring)) 
-        {
-          newFilteredPL.push(passItem);
-        }
-      }
-      console.log(newFilteredPL);
-      return newFilteredPL;
-    }
-  }
-
-  const passBankItems: React.ReactNode = filterPasswordList(filterString).map((passItem, index) =>
-    <PassBankItem passItem={passItem} key={passItem.id} index={index} onPassItemClick={onPassItemClick}/>
-  );
-
-  return (
-    <div className='container-fluid px-0'>
-      <div className='list-group'>
-        {(isLoading) ? <LoadingAnimation/> : passBankItems}
-      </div>
-    </div>
-  )
-}
-
-export function Input({ label, type, id, placeholder, pattern, errorMessage }: IInputProps) {
-  const { register, formState: {errors} } = useFormContext();
-
-  return (
-    <div className="container mb-3">
-      <div className='container'>
-        <label htmlFor={id} className="form-label">{label}</label>
-      </div>
-      <input type={type} className="form-control" id={id} placeholder={placeholder} {...register(id, {
-        required: "This field is required",
-        pattern: {
-          value: pattern,
-          message: errorMessage
-        },
-        })}/>
-      <ErrorMessage
-        errors={errors}
-        name={id}
-        render={({ messages }) => 
-          messages &&
-          Object.entries(messages).map(([type, message]) => (
-            <p key={type} className='text-danger'>{message}</p>
-          ))
-        }
-      />
-    </div>
-  );
-}
-
-function NewPasswordForm({updatePasswordList, handleClose, handleError}: passwordCreatorProps) {
-  const methods = useForm({
-    criteriaMode: "all"
-  });
-  const {jwt} = useAuth();
-
-  const onSubmit = methods.handleSubmit(async data => {
-    console.log(data);
-    const site_favicon = "/vite.svg"
-    const username = data.username;
-    const email = data.email;
-    const password = data.password;
-    const url = data.url
-    const newPassword = await useAddPassword({site_favicon, username, email, password, url, jwt, handleError})
-    if (newPassword) {
-      updatePasswordList(newPassword);
-      handleClose();
-    } else {
-      alert("password not added");
-    }
-    
-  })
-
-  return (
-    <FormProvider {...methods}>
-      <form onSubmit={e => e.preventDefault()} className="container" noValidate>
-        <Input
-          label="Username"
-          type="text"
-          id="username"
-          placeholder="type your username..."
-          pattern={/(?=.{8,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])/}
-          errorMessage = "You must enter a username between 8 and 20 characters"
-        />
-        <Input
-          label="Email"
-          type="email"
-          id="email"
-          placeholder="example@email.com"
-          pattern={/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/}
-          errorMessage = "You must enter a valid email"
-        />
-        <Generator readonlyPassword={false}/>
-        <Input
-          label="Website URL"
-          type="url"
-          id="url"
-          placeholder="https://www.placeholder.com"
-          pattern={/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/}
-          errorMessage = "You must enter a valid website URL"
-        />
-        <div className="container">
-          <button
-            onClick={onSubmit}
-            className="btn btn-secondary"
-            data-bs-dismiss="offCanvasWindow"
-          >
-            Submit
-          </button>
-        </div>
-      </form>
-    </FormProvider>
-  );
-}
-
-function PasswordCreator({updatePasswordList, handleClose, handleError }: passwordCreatorProps) {
-  return (
-    <>
-      <Offcanvas.Header closeButton>
-        <Offcanvas.Title>New Password</Offcanvas.Title>
-      </Offcanvas.Header>
-      <Offcanvas.Body>
-        <NewPasswordForm handleClose={handleClose} updatePasswordList={updatePasswordList} handleError={handleError}/>
-      </Offcanvas.Body>
-    </>
-  )
-}
-
 function OffCanvasWindow({canvasContent, passList, currentIndex, UpdatePassList, AddToPassList, show, setShow, handleError} : OffCanvasProps) {
 
   const handleClose = () => {
     console.log("handle close");
     setShow(false);
   }
+
 
   function renderCanvasContent() {
     if (canvasContent == "details") {
@@ -380,7 +135,11 @@ function OffCanvasWindow({canvasContent, passList, currentIndex, UpdatePassList,
         />
       )
     } else if (canvasContent == "add_pass") {
-      return <PasswordCreator updatePasswordList={AddToPassList} handleClose={handleClose} handleError={handleError}/>
+      return <PasswordCreator 
+        updatePasswordList={AddToPassList}
+        handleClose={handleClose} 
+        handleError={handleError}
+        />
     }
   }
 
@@ -411,14 +170,14 @@ function Body() {
     setBodyContent("error")
   }
   
-  function AddToPasswordList({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem) {
+  function AddToPasswordList({id, username, email, label, password, url, salt, iv}: PasswordListItem) {
     // add password on backend
     const newArr = [...passwordList];
     newArr.push({
       id: id,
-      site_favicon: site_favicon,
       username: username,
       email: email,
+      label: label,
       password: password,
       url: url,
       salt: salt,
@@ -428,15 +187,15 @@ function Body() {
     setBodyContent("passbank");
   }
 
-  function UpdatePasswordList({id, site_favicon, username, email, password, url, salt, iv}: PasswordListItem, operation: string) {
+  function UpdatePasswordList({id, username, email, password, url, label, salt, iv}: PasswordListItem, operation: string) {
     if (operation == "update") {
       const newPassList = passwordList.map((passItem) => {
         if (passItem.id == id) {
             return {
               id: id,
-              site_favicon: site_favicon,
               username: username,
               email: email,
+              label: label,
               password: password,
               url: url,
               salt: salt,

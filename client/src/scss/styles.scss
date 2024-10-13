@@ -1,5 +1,12 @@
 @import "../node_modules/bootstrap/scss/bootstrap";
   
+.login-container {
+    display: flex;
+    height:100vh;
+    justify-content: center;
+    align-items: center;
+}
+
 .nav-link {
     color: #FCF7F8 !important;
     &.active {
@@ -13,6 +20,10 @@
 
 .bg-secondary {
     background-color: #474E68 !important;
+}
+
+.text-light {
+    color: #FCF7F8 !important;
 }
 
 .border-dark {
