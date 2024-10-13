@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
-import { FormEventHandler } from "react";
-import { useForm } from "react-hook-form"
-import { ErrorMessage } from "@hookform/error-message";
-import { Input } from "./PassDetails";
+import { useForm } from "react-hook-form";
 
 
 export function Login() {   
@@ -33,7 +30,7 @@ export function Login() {
         }
     })
 
-    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    function handleChange() {
         setErr("");
     }
 

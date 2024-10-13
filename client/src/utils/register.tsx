@@ -1,5 +1,4 @@
 import { arrayBufferToBase64, deriveKeyLogin, hashDerivedKeyToBase64 } from "./encryption";
-import { useAuth } from "../AuthProvider";
 import { apiHost, apiPort, endpoints } from "../App";
 
 export async function registerUser(username: string, masterPassword: string) {

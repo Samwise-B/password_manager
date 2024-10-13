@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import {useForm, FormProvider, useFormContext} from "react-hook-form"
+import { useFormContext} from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
 import { generatePassword } from './utils/generatePassword';
 
@@ -35,7 +35,7 @@ function PasswordBox({password, isReadOnly, onRefreshClick, onChangePassword} : 
       <input className="form-control" type="text" value={password} id="generatedPassword" onChange={onChangePassword} readOnly={isReadOnly}/>
     )
   } else {
-    const { register, formState: {errors}, setValue } = useFormContext();
+    const { register, setValue } = useFormContext();
     passwordInput = (
       <>
         <input className="form-control" type="text" id="generatedPassword" readOnly={isReadOnly} {...register(label, {

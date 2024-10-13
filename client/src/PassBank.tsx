@@ -133,7 +133,7 @@ export function PassBankItem({passItem, index, onPassItemClick}: passBankItemPro
 function EmptyPassList({header, description}: EmptyPassListProps) {
     return (
         <div className="container py-3 text-light">
-            <img src="../public/empty_list.svg"></img>
+            <img src="/empty_list.svg"></img>
             <h2>{header}</h2>
             <p>{description}</p>
         </div>

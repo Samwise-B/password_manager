@@ -5,8 +5,11 @@ services:
       - POSTGRES_USER=$POSTGRES_USER
       - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
       - POSTGRES_DB=$POSTGRES_DB
+      - POSTGRES_SSLMODE="require"
     ports:
       - $POSTGRES_PORT:$POSTGRES_PORT
+    networks:
+      - api-network
     volumes:
       - ./db/data:/var/lib/postgresql/data
     restart: always
@@ -37,12 +40,14 @@ services:
       - JWT_SECRET=$JWT_SECRET
     ports:
       - $API_PORT:$API_PORT
+    networks:
+      - api-network
     volumes:
       - /app/node_modules
 
   app_build:
     build: 
-      context: ./client'
+      context: ./client
       dockerfile: Dockerfile.prod
     environment:
       - VITE_ENV=$VITE_ENV
@@ -57,12 +62,15 @@ services:
       - VITE_API_LOGIN_VERIFY=$VITE_API_LOGIN_VERIFY
       - VITE_API_REGISTER=$VITE_API_REGISTER
       - VITE_API_LOGOUT=$VITE_API_LOGOUT
-    volumns:
+    volumes:
       - ./client/build:/app/build
-      - ./app/node_modules
-    client_server:
+  client_server:
     image: nginx:1.27.2-alpine
     ports:
-      - 80:80
+    - 80:80
     volumes:
-    - ./ui/build:/usr/share/nginx/html
+    - ./client/build:/usr/share/nginx/html
+
+networks:
+  api-network:
+    driver: bridge

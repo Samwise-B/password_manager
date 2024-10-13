@@ -95,7 +95,7 @@ export function hashDerivedKeyToBase64(key: CryptoKey) {
     return window.crypto.subtle.exportKey('raw', key).then(keyBytes => {
         return window.crypto.subtle.digest("SHA-256", keyBytes).then(hashBuffer => {
             // convert hash buffer to hex string
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            //const hashArray = Array.from(new Uint8Array(hashBuffer));
             //const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join("");
             const hash64 = arrayBufferToBase64(new Uint8Array(hashBuffer));
             return hash64

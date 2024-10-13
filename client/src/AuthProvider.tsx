@@ -3,14 +3,6 @@ import { generateChallengeResponse } from "./utils/encryption";
 import { registerUser } from "./utils/register";
 import { apiHost, apiPort, endpoints } from "./App";
 
-interface IAuthProvider {
-    user: string | null,
-    jwt: string,
-    err: string | null,
-    login: () => void,
-    logout: () => void
-}
-
 interface IAuthProps {
     children: ReactNode;
 }
@@ -20,13 +12,16 @@ interface ILoginForm {
     password: string
 }
 
-const AuthContext = createContext({
-    user: null,
-    jwt: "",
-    login: async (data: ILoginForm) => {return ""},
-    regUser: async (data: ILoginForm) => {return ""},
-    logout: async () => {}
-});
+interface AuthContext {
+    user: string | null,
+    jwt: string,
+    login: (data: ILoginForm) => Promise<string>,
+    regUser: (data: ILoginForm) => Promise<string>,
+    logout: () => void,
+
+}
+
+const AuthContext = createContext<AuthContext>({} as AuthContext);
 
 export function AuthProvider({ children }: IAuthProps) {
     const [user, setUser] = useState(null);

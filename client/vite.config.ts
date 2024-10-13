@@ -12,6 +12,7 @@ export default defineConfig({
   },
   plugins: [react()],
   build: {
+    outDir: "./build",
     rollupOptions: {
       input: 'index.html', // Ensure this points to your entry HTML file
     },

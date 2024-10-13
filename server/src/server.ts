@@ -7,7 +7,7 @@ import { verifyToken } from "./utils";
 import { AuthenticatedRequest } from "./utils";
 
 const corsOptions = {
-  origin: ["http://localhost:3000", "http://localhost:5432"],
+  origin: ["http://localhost", "http://localhost:5432"],
   optionsSuccessStatus:200
 }
 // add .env configuration
@@ -72,7 +72,7 @@ app.post(`/${endpoints.addPass}`, verifyToken, async (req: AuthenticatedRequest,
     const userId = req.user;
     console.log(userId);
 
-    const insertPassword = "INSERT INTO user_passwords (user_id, username, email, url, label, encrypted_password, salt, iv) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;";
+    const insertPassword = "INSERT INTO user_passwords (user_id, username, email, url, label, encrypted_pass, salt, iv) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;";
     const newPassQueryObj = await pool.query(insertPassword, [userId, username, email, url, label, password, salt, iv]);
     const passwordList = await newPassQueryObj.rows[0];
 
@@ -99,7 +99,7 @@ app.post(`/${endpoints.updatePass}`, verifyToken, async (req: AuthenticatedReque
   const userId = req.user;
 
   const updateQuery = `UPDATE user_passwords 
-    SET username = $1, email = $2, encrypted_password = $3, 
+    SET username = $1, email = $2, encrypted_pass = $3, 
       url = $4, label = $5, salt = $6, iv = $7, last_modified = CURRENT_TIMESTAMP
     WHERE id = $8 AND user_id = $9 RETURNING *;`
 
@@ -158,7 +158,7 @@ app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response) =>
   }
   
   const user = users.rows[0] // assumes unique user
-  const storedHash = user.hashkey;
+  const storedHash = user.key_hash;
   const salt = user.salt;
   const challenge = user.challenge;
   console.log(username, challenge, storedHash, salt)
@@ -199,7 +199,7 @@ app.post(`/${endpoints.register}`, async (req: Request, res:Response) => {
       });
     }
 
-    const insertQuery = "INSERT INTO users (username, hashkey, salt) VALUES ($1, $2, $3);"
+    const insertQuery = "INSERT INTO users (username, key_hash, salt) VALUES ($1, $2, $3);"
     await pool.query(insertQuery, [username, hashedKey, salt]);
 
     res.json({

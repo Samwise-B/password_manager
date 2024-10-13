@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-import { PasswordListItem } from "../types";
 import { deriveKey, encryptPassword, arrayBufferToBase64 } from "./encryption";
 import { apiHost, apiPort, endpoints } from "../App";
 
