@@ -7,7 +7,7 @@ import { verifyToken } from "./utils";
 import { AuthenticatedRequest } from "./utils";
 
 const corsOptions = {
-  origin: ["http://localhost", "http://localhost:5432"],
+  origin: ["http://95.179.228.208", "http://localhost:5432"],
   optionsSuccessStatus:200
 }
 // add .env configuration
@@ -33,7 +33,8 @@ const endpoints = {
 console.log(endpoints);
 
 app.use(cors(corsOptions));
-app.use(express.json())
+app.use(express.json());
+app.options('*', cors())
 
 
 const pool = new Pool({
