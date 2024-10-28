@@ -2,3 +2,5 @@
 nginx.conf
 .env.prod
 certs
+ssh_key_pass
+
