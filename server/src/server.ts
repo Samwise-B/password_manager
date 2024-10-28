@@ -7,7 +7,7 @@ import { verifyToken } from "./utils";
 import { AuthenticatedRequest } from "./utils";
 
 const corsOptions = {
-  origin: ["http://95.179.228.208", "http://localhost:5432"],
+  origin: ["https://95.179.228.208", "https://localhost:5432"],
   optionsSuccessStatus:200
 }
 // add .env configuration
@@ -176,7 +176,8 @@ app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response) =>
     return res.json({
       success: true,
       token: token,
-      user: user.username
+      user: user.username,
+      salt: salt,
     })
   } else {
     return res.status(401).json({ 

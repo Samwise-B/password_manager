@@ -11,7 +11,7 @@ export function Login() {
     const handleLogin = methods.handleSubmit(async data => {
     //dispatch action from hooks
     if (data.username && data.password) {
-        const res: string = await auth.login({
+        const res = await auth.login({
             username: data.username,
             password: data.password
         });
@@ -61,7 +61,6 @@ export function Login() {
                 <button type="button"className="btn btn-secondary mx-1" onClick={handleRegister}>Register</button>
                 </div>
             </form>
-        </div>
-        
+        </div>  
     );
 };

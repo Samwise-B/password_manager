@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base64ToUint8Array, deriveKey, decryptPassword } from "./utils/encryption";
+import { base64ToUint8Array, decryptPassword } from "./utils/encryption";
 import { useAuth } from "./AuthProvider";
 import { LoadingAnimation } from "./LoadingAnimation";
 import { passBankProps, passBankItemProps, PasswordListItem, EmptyPassListProps } from "./types";
@@ -20,17 +20,17 @@ export function PassBank({passwordList, filterString, onPassItemClick, setPassLi
           return res.json();
         }).then(async passList => {
           //console.log(passList);
-          const masterKey = "secretpassword";
+          const masterKey = user.masterKey;
+          if (!masterKey) {
+            throw new Error(`error: masterKey is undefined`);
+        } 
           for (let i=0; i < passList.length; i++) {
             const encryptedData = {
               iv: base64ToUint8Array(passList[i].iv),
               ciphertext: base64ToUint8Array(passList[i].encrypted_password)
             }
             //console.log(encryptedData)
-            const password = await deriveKey(masterKey, passList[i].salt).then(key => {
-              //console.log("encryption key", key);
-              return decryptPassword(encryptedData, key);
-            });
+            const password = await decryptPassword(encryptedData, masterKey);
             passList[i]['password'] = password;
           }
           console.log(passList);

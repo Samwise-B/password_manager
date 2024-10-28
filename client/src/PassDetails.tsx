@@ -72,6 +72,7 @@ export function PassDetails({passList, currentIndex, updatePassList, handleClose
           url: data.url,
           label: data.label,
           jwt: user.jwt,
+          masterKey: user.masterKey,
           handleError: handleError
         });
         if (updatedPassword) {

@@ -1,5 +1,5 @@
 import {useContext, createContext, useState, ReactNode} from "react";
-import { generateChallengeResponse } from "./utils/encryption";
+import { generateChallengeResponse, deriveKey } from "./utils/encryption";
 import { registerUser } from "./utils/register";
 import { apiHost, apiPort, endpoints } from "./App";
 
@@ -15,6 +15,7 @@ interface ILoginForm {
 interface AuthContext {
     user: string | null,
     jwt: string,
+    masterKey: CryptoKey | null,
     login: (data: ILoginForm) => Promise<string>,
     regUser: (data: ILoginForm) => Promise<string>,
     logout: () => void,
@@ -25,6 +26,8 @@ const AuthContext = createContext<AuthContext>({} as AuthContext);
 
 export function AuthProvider({ children }: IAuthProps) {
     const [user, setUser] = useState(null);
+    //const [salt, setSalt] = useState("");
+    const [masterKey, SetMasterKey] = useState<CryptoKey|null>(null);
     const [jwt, setJwt] = useState(localStorage.getItem("site") || "");
     //const [err, setErr] = useState<string>("");
 
@@ -72,83 +75,39 @@ export function AuthProvider({ children }: IAuthProps) {
                 setUser(result.user);
                 setJwt(result.token);
                 localStorage.setItem("site", result.token);
+                const masterKey = await deriveKey(password, salt);
+                SetMasterKey(masterKey);
+                //localStorage.setItem("key", masterKey)
                 return "";
             }
             throw new Error(result.error);
         } catch (err: any) {
             return err.message;
         }
-        // return fetch("http://localhost:3001/login-challenge", {
-        //     method: "POST",
-        //     headers: {
-        //         "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({ username }),
-        // }).then(challengeResponse => {
-        //     // Check if response is OK
-        //     // if (!challengeResponse.ok) {
-        //     //     return Promise.reject(challengeResponse.json());
-        //     // }
-        //     return challengeResponse.json();
-        // }).then(challengeObj => {
-        //     if (!challengeObj.success) {
-        //         throw new Error(challengeObj);
-        //     }
-        //     return challengeObj;
-        // })
-        // .then(({challenge, salt}) => {
-        //     //const { challenge, salt } = challengeResponse.json();
-        //     return generateChallengeResponse(password, challenge, salt).then(response => ({
-        //         response,
-        //         challenge,
-        //     }));
-        // }).then(({response, challenge}) => {
-        //     return fetch("http://localhost:3001/verify-challenge", {
-        //         method: "POST",
-        //         headers: {
-        //             'Content-Type': "application/json",
-        //         },
-        //         body: JSON.stringify({ username, response, challenge })
-        //     });
-        // })
-        // .then(verifyResponse => {
-        //     if (!verifyResponse.ok) {
-        //         return Promise.reject(verifyResponse.json());
-        //     }
-        //     return verifyResponse.json();
-        // })
-        // .then(result => {
-        //     if (result.success) {
-        //         console.log("Successful Authentication!", result.user, result.token);
-        //         setUser(result.user);
-        //         setJwt(result.token);
-        //         localStorage.setItem("site", result.token);
-        //         return {success: true, error: ""};
-        //     }
-        //     return(result);
-        // })
-        // .catch(err => {
-        //     console.error("Error:", err.message);
-        //     setErr(err.message);
-        //     return {success: false, error: err.message};
-        //     //return err.message;
-        // });
     }
 
     async function regUser(data: ILoginForm) {
         const username = data.username;
         const password = data.password;
-        return registerUser(username, password);
+        const res = await registerUser(username, password);
+        if (res.err != null) {
+            return res.err;
+        } else {
+            const salt = res.salt;
+            const masterKey = await deriveKey(password, salt);
+            SetMasterKey(masterKey)
+        }
     }
 
     async function logout() {
         setUser(null);
         setJwt("");
+        SetMasterKey(null);
         localStorage.removeItem("site");
     }
 
     return (
-        <AuthContext.Provider value={{user, jwt, login, regUser, logout}}>
+        <AuthContext.Provider value={{user, jwt, masterKey, login, regUser, logout}}>
             {children}
         </AuthContext.Provider>
     );

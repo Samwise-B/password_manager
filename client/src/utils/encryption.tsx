@@ -35,6 +35,7 @@ export function deriveKey(masterPassword: string, salt: string) {
 export async function deriveKeyLogin(masterPassword: string, salt: string) {
     const enc = new TextEncoder();
     console.log(enc, masterPassword)
+    console.log("crypto avail", crypto.subtle);
     const keyMaterial = await crypto.subtle.importKey(
         "raw",
         enc.encode(masterPassword),
