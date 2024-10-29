@@ -16,8 +16,8 @@ import { get } from "http";
 dotenv.config();
 
 const sslOptions = {
-  key: fs.readFileSync(path.join(__dirname, 'cert/live/oceans-end.com/privkey.pem')),
-  cert: fs.readFileSync(path.join(__dirname, 'cert/live/oceans-end.com/fullchain.pem'))
+  key: fs.readFileSync(path.join(__dirname, '/../cert/live/oceans-end.com/privkey.pem')),
+  cert: fs.readFileSync(path.join(__dirname, '/../cert/live/oceans-end.com/fullchain.pem'))
 };
 
 const corsOptions = {
@@ -30,7 +30,7 @@ const config = {
 }
 
 const app: Express = express();
-const port = process.env.PORT || 5000; // You can choose any port
+const port = getEnvVariable("PORT"); // You can choose any port
 
 
 const endpoints = {
