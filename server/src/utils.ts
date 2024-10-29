@@ -27,3 +27,11 @@ export async function verifyToken(req: AuthenticatedRequest, res: Response, next
         next();
     })
 }
+
+export function getEnvVariable(name: string): string {
+    const value = process.env[name];
+    if (!value) {
+      throw new Error(`Missing required environment variable: ${name}`);
+    }
+    return value;
+  }

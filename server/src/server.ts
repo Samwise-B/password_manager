@@ -4,30 +4,44 @@ import { Pool } from "pg";
 import dotenv from "dotenv";
 import cors from 'cors';
 import { verifyToken } from "./utils";
-import { AuthenticatedRequest } from "./utils";
+import { AuthenticatedRequest, getEnvVariable } from "./utils";
+import https from "https";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import path from "path";
+import fs from "fs";
+import { get } from "http";
+
+// add .env configuration
+dotenv.config();
+
+const sslOptions = {
+  key: fs.readFileSync(path.join(__dirname, 'cert/live/oceans-end.com/privkey.pem')),
+  cert: fs.readFileSync(path.join(__dirname, 'cert/live/oceans-end.com/fullchain.pem'))
+};
 
 const corsOptions = {
   origin: ["https://95.179.228.208", "https://localhost:5432"],
   optionsSuccessStatus:200
 }
-// add .env configuration
-dotenv.config();
+
+const config = {
+  JWT_SECRET: getEnvVariable("JWT_SECRET")
+}
 
 const app: Express = express();
 const port = process.env.PORT || 5000; // You can choose any port
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 
 
 const endpoints = {
-  getList: process.env.API_GET_LIST_ENDPOINT,
-  addPass: process.env.API_ADD_PASS_ENDPOINT,
-  updatePass: process.env.API_UPDATE_PASS_ENDPOINT,
-  deletePass: process.env.API_DELETE_PASS_ENDPOINT,
-  loginChallenge: process.env.API_LOGIN_CHALLENGE_ENDPOINT,
-  verifyChallenge: process.env.API_LOGIN_VERIFY_ENDPOINT,
-  register: process.env.API_REGISTER_ENDPOINT,
-  logout: process.env.API_LOGOUT_ENDPOINT,
+  getList: getEnvVariable("API_GET_LIST_ENDPOINT"),
+  addPass: getEnvVariable("API_ADD_PASS_ENDPOINT"),
+  updatePass: getEnvVariable("API_UPDATE_PASS_ENDPOINT"),
+  deletePass: getEnvVariable("API_DELETE_PASS_ENDPOINT"),
+  loginChallenge: getEnvVariable("API_LOGIN_CHALLENGE_ENDPOINT"),
+  verifyChallenge: getEnvVariable("API_LOGIN_VERIFY_ENDPOINT"),
+  register: getEnvVariable("API_REGISTER_ENDPOINT"),
+  logout: getEnvVariable("API_LOGOUT_ENDPOINT"),
 }
 
 console.log(endpoints);
@@ -38,11 +52,11 @@ app.options('*', cors())
 
 
 const pool = new Pool({
-  user: process.env.POSTGRES_USER,
-  host: process.env.PGHOST,
-  database: process.env.POSTGRES_DB,
-  password: process.env.POSTGRES_PASSWORD,
-  port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT): undefined,
+  user: getEnvVariable("POSTGRES_USER"),
+  host: getEnvVariable("PGHOST"),
+  database: getEnvVariable("POSTGRES_DB"),
+  password: getEnvVariable("POSTGRES_PASSWORD"),
+  port: parseInt(getEnvVariable("POSTGRES_PORT")),
 })
 
 app.get(`/${endpoints.getList}`, verifyToken, async (req: AuthenticatedRequest, res: Response) => {
@@ -170,7 +184,7 @@ app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response) =>
   console.log(expectedResponse, response)
 
   if (expectedResponse === response) {
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '14d' });
+    const token = jwt.sign({ userId: user.id }, config.JWT_SECRET, { expiresIn: '14d' });
     console.log("signing for:", user.id)
 
     return res.json({
@@ -214,13 +228,17 @@ app.post(`/${endpoints.register}`, async (req: Request, res:Response) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port number ${port}`);
-  console.log({
-    user: process.env.POSTGRES_USER,
-    host: process.env.PGHOST,
-    database: process.env.POSTGRES_DB,
-    password: process.env.POSTGRES_PASSWORD,
-    port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT): undefined,
-  })
+// app.listen(port, () => {
+//   console.log(`Server is running on port number ${port}`);
+//   console.log({
+//     user: process.env.POSTGRES_USER,
+//     host: process.env.PGHOST,
+//     database: process.env.POSTGRES_DB,
+//     password: process.env.POSTGRES_PASSWORD,
+//     port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT): undefined,
+//   })
+// });
+
+https.createServer(sslOptions, app).listen(443, () => {
+  console.log("Server running on https://oceans-end.com");
 });
