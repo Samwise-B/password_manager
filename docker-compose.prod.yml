@@ -18,8 +18,8 @@ services:
     depends_on:
       - db
     build: 
-      context: ./server
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile: server/Dockerfile.prod
     environment:
       - NODE_ENV=$API_NODE_ENV
       - PORT=$API_PORT
@@ -43,6 +43,7 @@ services:
       - api-network
     volumes:
       - /app/node_modules
+      - ./certs/:certs/
 
   app_build:
     build: 

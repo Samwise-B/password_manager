@@ -10,14 +10,13 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import path from "path";
 import fs from "fs";
-import { get } from "http";
 
 // add .env configuration
 dotenv.config();
 
 const sslOptions = {
-  key: fs.readFileSync(path.join(__dirname, '/../cert/live/oceans-end.com/privkey.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '/../cert/live/oceans-end.com/fullchain.pem'))
+  key: fs.readFileSync(path.join(__dirname, '/cert/live/oceans-end.com/privkey.pem')),
+  cert: fs.readFileSync(path.join(__dirname, '/cert/live/oceans-end.com/fullchain.pem'))
 };
 
 const corsOptions = {
