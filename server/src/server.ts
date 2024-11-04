@@ -80,21 +80,21 @@ app.use(
   })
 );
 
-app.get(`/${endpoints.getList}`, isAuthenticated, async (req: Request, res: Response) => {
+app.get(`/${endpoints.getList}`, isAuthenticated, async (req: Request, res: Response): Promise<any> => {
   try {
     const userId = req.session.userId;
     console.log(userId);
     const passQuery = "SELECT * FROM user_passwords WHERE user_id = $1 ORDER BY id ASC"
     const result = await pool.query(passQuery, [userId]);
     const passwords = result.rows;
-    res.json(passwords);
+    return res.json(passwords);
   } catch (err) {
-    res.status(500).json({ error: "Unable to fetch passwords. Please try again later" });
+    return res.status(500).json({ error: "Unable to fetch passwords. Please try again later" });
     //throw err;
   }
 });
 
-app.post(`/${endpoints.addPass}`, isAuthenticated, async (req: Request, res: Response) => {
+app.post(`/${endpoints.addPass}`, isAuthenticated, async (req: Request, res: Response): Promise<any> => {
   try {
     const {
       username,
@@ -112,10 +112,10 @@ app.post(`/${endpoints.addPass}`, isAuthenticated, async (req: Request, res: Res
     const newPassQueryObj = await pool.query(insertPassword, [userId, username, email, url, label, password, salt, iv]);
     const passwordList = await newPassQueryObj.rows[0];
 
-    res.json(passwordList);
+    return res.json(passwordList);
   } catch (err) {
     console.log(`Unable to add password: ${err}`);
-    res.status(500).json({ error: "Unable to add password. Please try again later" })
+    return res.status(500).json({ error: "Unable to add password. Please try again later" })
   }
 })
 
@@ -164,14 +164,14 @@ app.post(`/${endpoints.deletePass}`, isAuthenticated, async (req: Request, res: 
   })
 });
 
-app.post(`/${endpoints.loginChallenge}`, async (req: Request, res: Response) => {
+app.post(`/${endpoints.loginChallenge}`, async (req: Request, res: Response): Promise<any> => {
   const { username } = req.body;
 
   const userQuery = "SELECT * FROM users WHERE username = $1;"
   const users = await pool.query(userQuery, [username])
   console.log(users)
   if (users.rowCount == 0) {
-    res.status(404).json({ success: false, error: "Incorrect username or password." });
+    return res.status(404).json({ success: false, error: "Incorrect username or password." });
   }
 
   // generate and store challenge temporarily
@@ -181,16 +181,16 @@ app.post(`/${endpoints.loginChallenge}`, async (req: Request, res: Response) => 
 
   const salt = users.rows[0].salt; // assumes unique usernames
 
-  res.json({ success: true, challenge, salt });
+  return res.json({ success: true, challenge, salt });
 })
 
-app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response) => {
+app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response): Promise<any> => {
   const { username, response } = req.body;
 
   const userQuery = "SELECT * FROM users WHERE username = $1;"
   const users = await pool.query(userQuery, [username])
   if (!users) {
-    res.status(401).json({ error: "Incorrect username or password." });
+    return res.status(401).json({ error: "Incorrect username or password." });
   }
 
   const user = users.rows[0] // assumes unique user
@@ -212,21 +212,21 @@ app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response) =>
     // res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
     // res.setHeader('Access-Control-Allow-Origin', 'https://oceans-end.com');
 
-    res.json({
+    return res.json({
       success: true,
       //token: token,
       user: user.username,
       salt: salt,
     })
   } else {
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
       error: "Incorrect username or password"
     });
   }
 })
 
-app.post(`/${endpoints.register}`, async (req: Request, res: Response) => {
+app.post(`/${endpoints.register}`, async (req: Request, res: Response): Promise<any> => {
   const { username, hashedKey, salt } = req.body;
   console.log(username, hashedKey, salt);
 
@@ -235,7 +235,7 @@ app.post(`/${endpoints.register}`, async (req: Request, res: Response) => {
     const usernameResult = await pool.query(usernameQuery, [username]);
 
     if (usernameResult.rows.length != 0) {
-      res.status(400).json({
+      return res.status(400).json({
         error: "Username already taken"
       });
     }
@@ -243,11 +243,11 @@ app.post(`/${endpoints.register}`, async (req: Request, res: Response) => {
     const insertQuery = "INSERT INTO users (username, key_hash, salt) VALUES ($1, $2, $3);"
     await pool.query(insertQuery, [username, hashedKey, salt]);
 
-    res.json({
+    return res.json({
       success: true,
     });
   } catch (err) {
-    res.status(400).json({
+    return res.status(400).json({
       error: "Unable to register, please try again later",
     })
   }
