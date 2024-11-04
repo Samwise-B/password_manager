@@ -1,6 +1,4 @@
-import { useEffect } from "react";
-import { PasswordListItem } from "../types";
-import { deriveKey, encryptPassword, arrayBufferToBase64 } from "./encryption";
+import {  encryptPassword, arrayBufferToBase64 } from "./encryption";
 import { apiHost, apiPort, endpoints } from "../App";
 
 export interface IAddPassword {
@@ -10,6 +8,7 @@ export interface IAddPassword {
     label: string;
     password: string;
     jwt: string;
+    masterKey: CryptoKey | null;
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void;
 }
 export interface IUpdatePassword {
@@ -21,6 +20,7 @@ export interface IUpdatePassword {
     label: string;
     password: string;
     jwt: string;
+    masterKey: CryptoKey | null;
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
 }
 
@@ -29,14 +29,16 @@ export interface IDeletePassword {
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
 }
 
-export async function useAddPassword({username, email, password, url, label, jwt}: IAddPassword) {
+export async function useAddPassword({username, email, password, url, label, masterKey}: IAddPassword) {
     console.log({username, email, password, url, label});
-    const masterKey = "secretpassword";
     const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
 
     try {
-        const encryptionKey = await deriveKey(masterKey, salt);
-        const encryptedPassword = await encryptPassword(password, encryptionKey);
+        //const encryptionKey = await deriveKey(masterKey, salt);
+        if (!masterKey) {
+            throw new Error(`error: masterKey is undefined`);
+        }
+        const encryptedPassword = await encryptPassword(password, masterKey);
         const newPassword = {
             username: username,
             email: email,
@@ -47,14 +49,15 @@ export async function useAddPassword({username, email, password, url, label, jwt
             iv: arrayBufferToBase64(encryptedPassword.iv)
         };
 
-        const res = await fetch(`http://${apiHost}:${apiPort}/${endpoints.addPass}`, {
+        const res = await fetch(`${apiHost}:${apiPort}/${endpoints.addPass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                "Authorization": jwt
+                //"Authorization": jwt
             },
-            body: JSON.stringify(newPassword)
+            body: JSON.stringify(newPassword),
+            credentials: 'include'
         });
 
         if (res.ok) {
@@ -76,14 +79,17 @@ export async function useAddPassword({username, email, password, url, label, jwt
     }
 }
 
-export async function useUpdatePassword({id, site_favicon, username, email, password, url, label, jwt}: IUpdatePassword) {
+export async function useUpdatePassword({id, site_favicon, username, email, password, url, label, masterKey}: IUpdatePassword) {
     console.log({site_favicon, username, email, password, url});
-    const masterKey = "secretpassword";
+    //const masterKey = "secretpassword";
     // generate new encryption key & encrypt password
     const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
     try {
-        const encryptionKey = await deriveKey(masterKey, salt);
-        const encryptedPassword = await encryptPassword(password, encryptionKey);
+        //const encryptionKey = await deriveKey(masterKey, salt);
+        if (!masterKey) {
+            throw new Error(`error: masterKey is undefined`);
+        } 
+        const encryptedPassword = await encryptPassword(password, masterKey);
         const updatedPassword = {
             id: id,
             username: username,
@@ -95,14 +101,15 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
             iv: arrayBufferToBase64(encryptedPassword.iv)
         };
 
-        const res = await fetch(`http://${apiHost}:${apiPort}/${endpoints.updatePass}`, {
+        const res = await fetch(`${apiHost}:${apiPort}/${endpoints.updatePass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                "Authorization": jwt
+                //"Authorization": jwt
             },
-            body: JSON.stringify(updatedPassword)
+            body: JSON.stringify(updatedPassword),
+            credentials: 'include'
         });
 
         if (res.ok) {
@@ -122,17 +129,18 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
     }
 };
 
-export async function useDeletePassword(id: number, jwt: string) {
+export async function useDeletePassword(id: number) {
     console.log("deleting:", id);
     try {
-        const res = await fetch(`http://${apiHost}:${apiPort}/${endpoints.deletePass}`, {
+        const res = await fetch(`${apiHost}:${apiPort}/${endpoints.deletePass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                "Authorization": jwt
+                //"Authorization": jwt
             },
-            body: JSON.stringify({id: id})
+            body: JSON.stringify({id: id}),
+            credentials: 'include'
         });
 
         if (res.ok) {

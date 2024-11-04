@@ -23,7 +23,7 @@ export function NewPasswordForm({updatePasswordList, handleClose, handleError}: 
     const methods = useForm({
         criteriaMode: "all"
     });
-    const {jwt} = useAuth();
+    const {jwt, masterKey} = useAuth();
 
     const onSubmit = methods.handleSubmit(async data => {
         console.log(data);
@@ -32,7 +32,7 @@ export function NewPasswordForm({updatePasswordList, handleClose, handleError}: 
         const password = data.password;
         const url = data.url;
         const label = data.label;
-        const newPassword = await useAddPassword({username, email, password, url, label, jwt, handleError})
+        const newPassword = await useAddPassword({username, email, password, url, label, jwt, masterKey, handleError})
         if (newPassword) {
         updatePasswordList(newPassword);
         handleClose();

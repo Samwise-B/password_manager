@@ -1,5 +1,4 @@
 import { arrayBufferToBase64, deriveKeyLogin, hashDerivedKeyToBase64 } from "./encryption";
-import { useAuth } from "../AuthProvider";
 import { apiHost, apiPort, endpoints } from "../App";
 
 export async function registerUser(username: string, masterPassword: string) {
@@ -9,7 +8,7 @@ export async function registerUser(username: string, masterPassword: string) {
     console.log(derivedKey, hashedKey);
 
     try {
-        const regResponse = await fetch(`http://${apiHost}:${apiPort}/${endpoints.register}`, {
+        const regResponse = await fetch(`${apiHost}:${apiPort}/${endpoints.register}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -19,33 +18,15 @@ export async function registerUser(username: string, masterPassword: string) {
                 hashedKey: hashedKey,
                 salt: salt,
             }),
+            credentials: 'include'
         });
 
         if (!regResponse.ok) {
             const error = await regResponse.json();
             throw new Error(error.error);
         }
+        return {err: null, key: masterPassword, salt: salt}
     } catch (err: any) {
-        return err.message
+        return {err: err.message, key:"", salt:""}
     }
-
-    // return fetch("http://localhost:3001/register", {
-    //     method: "POST",
-    //     headers: {
-    //         "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify({ 
-    //         username: username,
-    //         hashedKey: hashedKey,
-    //         salt: salt,
-    //     }),
-    // }).then(async registerRes => {
-    //     if (registerRes.ok) {
-    //         const err = await registerRes.json();
-    //         throw new Error(err.error);
-    //     }
-    //     return {success: true, error: ""}
-    // }).catch(errMsg => {
-    //     return errMsg.error
-    // });
 }

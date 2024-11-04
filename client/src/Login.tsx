@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
-import { FormEventHandler } from "react";
-import { useForm } from "react-hook-form"
-import { ErrorMessage } from "@hookform/error-message";
-import { Input } from "./PassDetails";
+import { useForm } from "react-hook-form";
 
 
 export function Login() {   
@@ -14,7 +11,7 @@ export function Login() {
     const handleLogin = methods.handleSubmit(async data => {
     //dispatch action from hooks
     if (data.username && data.password) {
-        const res: string = await auth.login({
+        const res = await auth.login({
             username: data.username,
             password: data.password
         });
@@ -33,7 +30,7 @@ export function Login() {
         }
     })
 
-    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    function handleChange() {
         setErr("");
     }
 
@@ -64,7 +61,6 @@ export function Login() {
                 <button type="button"className="btn btn-secondary mx-1" onClick={handleRegister}>Register</button>
                 </div>
             </form>
-        </div>
-        
+        </div>  
     );
 };

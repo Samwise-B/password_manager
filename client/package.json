@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "proxy": [
-    "http://localhost:3001",
-    "http://localhost:5432"
+    "https://localhost:3001",
+    "https://localhost:5432"
   ],
   "scripts": {
     "dev": "vite",
@@ -25,24 +25,25 @@
     "react-bootstrap": "^2.10.4",
     "react-dom": "^18.3.1",
     "react-error-boundary": "^4.0.13",
-    "react-hook-form": "^7.53.0"
-  },
-  "devDependencies": {
+    "react-hook-form": "^7.53.0",
     "@eslint/js": "^9.9.0",
     "@types/node": "^22.7.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "typescript": "^5.5.3",
     "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8"
+  },
+  "devDependencies": {
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
     "sass": "^1.79.4",
-    "typescript": "^5.5.3",
-    "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.8"
+    "typescript-eslint": "^8.0.1"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.24.0"
+    "@rollup/rollup-linux-x64-gnu": "^4.24.0",
+    "@rollup/rollup-linux-x64-musl": "^4.24.0"
   }
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { base64ToUint8Array, deriveKey, decryptPassword } from "./utils/encryption";
+import { base64ToUint8Array, decryptPassword } from "./utils/encryption";
 import { useAuth } from "./AuthProvider";
 import { LoadingAnimation } from "./LoadingAnimation";
 import { passBankProps, passBankItemProps, PasswordListItem, EmptyPassListProps } from "./types";
@@ -12,25 +12,28 @@ export function PassBank({passwordList, filterString, onPassItemClick, setPassLi
     useEffect(() => {
       const fetchPassList = async () => {
         console.log(user);
-        fetch(`http://${apiHost}:${apiPort}/${endpoints.getList}`, {
-          headers: {
-            "Authorization": user.jwt,
-          }
+        fetch(`${apiHost}:${apiPort}/${endpoints.getList}`, {
+          credentials: 'include',
+          // headers: {
+          //   "Authorization": user.jwt,
+          // }
+          
         }).then(res => {
           return res.json();
         }).then(async passList => {
           //console.log(passList);
-          const masterKey = "secretpassword";
+          const masterKey = user.masterKey;
+          console.log(masterKey)
+          if (!masterKey) {
+            throw new Error(`error: masterKey is undefined`);
+        } 
           for (let i=0; i < passList.length; i++) {
             const encryptedData = {
               iv: base64ToUint8Array(passList[i].iv),
               ciphertext: base64ToUint8Array(passList[i].encrypted_password)
             }
             //console.log(encryptedData)
-            const password = await deriveKey(masterKey, passList[i].salt).then(key => {
-              //console.log("encryption key", key);
-              return decryptPassword(encryptedData, key);
-            });
+            const password = await decryptPassword(encryptedData, masterKey);
             passList[i]['password'] = password;
           }
           console.log(passList);
@@ -133,7 +136,7 @@ export function PassBankItem({passItem, index, onPassItemClick}: passBankItemPro
 function EmptyPassList({header, description}: EmptyPassListProps) {
     return (
         <div className="container py-3 text-light">
-            <img src="../public/empty_list.svg"></img>
+            <img src="/empty_list.svg"></img>
             <h2>{header}</h2>
             <p>{description}</p>
         </div>
