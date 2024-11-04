@@ -1,4 +1,4 @@
-import express, {Express, Request, response, Response} from "express";
+import express, { Express, Request, response, Response } from "express";
 import crypto from "crypto";
 import { Pool } from "pg";
 import dotenv from "dotenv";
@@ -9,9 +9,6 @@ import https from "https";
 import jwt from "jsonwebtoken";
 import path from "path";
 import fs from "fs";
-//import KnexSessionStoreFactory from "connect-session-knex";
-//import {session} from "express-session";
-import knex from "knex";
 
 // add .env configuration
 dotenv.config();
@@ -25,7 +22,7 @@ const sslOptions = {
 
 const corsOptions = {
   origin: ["https://oceans-end.com", "https://localhost:5432", "https://oceans-end.com:3001/"],
-  optionsSuccessStatus:200,
+  optionsSuccessStatus: 200,
   credentials: true,
 }
 
@@ -92,9 +89,9 @@ app.get(`/${endpoints.getList}`, isAuthenticated, async (req: Request, res: Resp
     const passwords = result.rows;
     res.json(passwords);
   } catch (err) {
-    res.status(500).json({error: "Unable to fetch passwords. Please try again later"});
+    res.status(500).json({ error: "Unable to fetch passwords. Please try again later" });
     //throw err;
-  }  
+  }
 });
 
 app.post(`/${endpoints.addPass}`, isAuthenticated, async (req: Request, res: Response) => {
@@ -115,13 +112,13 @@ app.post(`/${endpoints.addPass}`, isAuthenticated, async (req: Request, res: Res
     const newPassQueryObj = await pool.query(insertPassword, [userId, username, email, url, label, password, salt, iv]);
     const passwordList = await newPassQueryObj.rows[0];
 
-    res.json(passwordList); 
+    res.json(passwordList);
   } catch (err) {
     console.log(`Unable to add password: ${err}`);
-    res.status(500).json({error: "Unable to add password. Please try again later"}) 
+    res.status(500).json({ error: "Unable to add password. Please try again later" })
   }
 })
- 
+
 app.post(`/${endpoints.updatePass}`, isAuthenticated, async (req: Request, res: Response) => {
   const {
     username,
@@ -146,7 +143,7 @@ app.post(`/${endpoints.updatePass}`, isAuthenticated, async (req: Request, res: 
     return res.json(updatedPasswords.rows[0]);
   }).catch(err => {
     console.log(`${err}: Unable to update password`);
-    return res.status(500).json({error: err.message})
+    return res.status(500).json({ error: err.message })
   })
 });
 
@@ -162,7 +159,7 @@ app.post(`/${endpoints.deletePass}`, isAuthenticated, async (req: Request, res: 
       return res.json(deletedPasswords.rows[0]);
     } else {
       console.log('No password with that id');
-      return res.status(400).json({error: "No id associated with that user"})
+      return res.status(400).json({ error: "No id associated with that user" })
     }
   })
 });
@@ -174,7 +171,7 @@ app.post(`/${endpoints.loginChallenge}`, async (req: Request, res: Response) => 
   const users = await pool.query(userQuery, [username])
   console.log(users)
   if (users.rowCount == 0) {
-    res.status(404).json({ success: false, error: "Incorrect username or password."});
+    res.status(404).json({ success: false, error: "Incorrect username or password." });
   }
 
   // generate and store challenge temporarily
@@ -193,9 +190,9 @@ app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response) =>
   const userQuery = "SELECT * FROM users WHERE username = $1;"
   const users = await pool.query(userQuery, [username])
   if (!users) {
-    res.status(401).json({ error: "Incorrect username or password."});
+    res.status(401).json({ error: "Incorrect username or password." });
   }
-  
+
   const user = users.rows[0] // assumes unique user
   const storedHash = user.key_hash;
   const salt = user.salt;
@@ -222,14 +219,14 @@ app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response) =>
       salt: salt,
     })
   } else {
-    res.status(401).json({ 
-      success:false,
+    res.status(401).json({
+      success: false,
       error: "Incorrect username or password"
     });
   }
-}) 
+})
 
-app.post(`/${endpoints.register}`, async (req: Request, res:Response) => {
+app.post(`/${endpoints.register}`, async (req: Request, res: Response) => {
   const { username, hashedKey, salt } = req.body;
   console.log(username, hashedKey, salt);
 
