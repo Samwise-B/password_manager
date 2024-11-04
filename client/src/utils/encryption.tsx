@@ -158,3 +158,4 @@ export async function generateChallengeResponse(password: string, challenge: str
     return arrayBufferToBase64(new Uint8Array(signature));
 }
 
+

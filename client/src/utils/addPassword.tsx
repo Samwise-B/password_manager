@@ -29,7 +29,7 @@ export interface IDeletePassword {
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void
 }
 
-export async function useAddPassword({username, email, password, url, label, jwt, masterKey}: IAddPassword) {
+export async function useAddPassword({username, email, password, url, label, masterKey}: IAddPassword) {
     console.log({username, email, password, url, label});
     const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
 
@@ -49,14 +49,15 @@ export async function useAddPassword({username, email, password, url, label, jwt
             iv: arrayBufferToBase64(encryptedPassword.iv)
         };
 
-        const res = await fetch(`https://${apiHost}:${apiPort}/${endpoints.addPass}`, {
+        const res = await fetch(`${apiHost}:${apiPort}/${endpoints.addPass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                "Authorization": jwt
+                //"Authorization": jwt
             },
-            body: JSON.stringify(newPassword)
+            body: JSON.stringify(newPassword),
+            credentials: 'include'
         });
 
         if (res.ok) {
@@ -78,7 +79,7 @@ export async function useAddPassword({username, email, password, url, label, jwt
     }
 }
 
-export async function useUpdatePassword({id, site_favicon, username, email, password, url, label, jwt, masterKey}: IUpdatePassword) {
+export async function useUpdatePassword({id, site_favicon, username, email, password, url, label, masterKey}: IUpdatePassword) {
     console.log({site_favicon, username, email, password, url});
     //const masterKey = "secretpassword";
     // generate new encryption key & encrypt password
@@ -100,14 +101,15 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
             iv: arrayBufferToBase64(encryptedPassword.iv)
         };
 
-        const res = await fetch(`https://${apiHost}:${apiPort}/${endpoints.updatePass}`, {
+        const res = await fetch(`${apiHost}:${apiPort}/${endpoints.updatePass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                "Authorization": jwt
+                //"Authorization": jwt
             },
-            body: JSON.stringify(updatedPassword)
+            body: JSON.stringify(updatedPassword),
+            credentials: 'include'
         });
 
         if (res.ok) {
@@ -127,17 +129,18 @@ export async function useUpdatePassword({id, site_favicon, username, email, pass
     }
 };
 
-export async function useDeletePassword(id: number, jwt: string) {
+export async function useDeletePassword(id: number) {
     console.log("deleting:", id);
     try {
-        const res = await fetch(`https://${apiHost}:${apiPort}/${endpoints.deletePass}`, {
+        const res = await fetch(`${apiHost}:${apiPort}/${endpoints.deletePass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                "Authorization": jwt
+                //"Authorization": jwt
             },
-            body: JSON.stringify({id: id})
+            body: JSON.stringify({id: id}),
+            credentials: 'include'
         });
 
         if (res.ok) {

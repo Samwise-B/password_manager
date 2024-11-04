@@ -306,13 +306,13 @@ interface IDeletePassword {
 
 export function DeleteButton({passItem, updatePassList, closeOffCanvas}: IDeletePassword) {
   const [show, setShow] = useState<boolean>(false);
-  const user = useAuth();
+  //const user = useAuth();
 
   const handleShow = () => setShow(true);
   const handleClose = () => setShow(false);
 
   async function deletePassword() {
-    const deletedPassword = await useDeletePassword(passItem.id, user.jwt);
+    const deletedPassword = await useDeletePassword(passItem.id);
 
     if (deletedPassword) {
       updatePassList({...passItem}, "delete");

@@ -12,15 +12,18 @@ export function PassBank({passwordList, filterString, onPassItemClick, setPassLi
     useEffect(() => {
       const fetchPassList = async () => {
         console.log(user);
-        fetch(`http://${apiHost}:${apiPort}/${endpoints.getList}`, {
-          headers: {
-            "Authorization": user.jwt,
-          }
+        fetch(`${apiHost}:${apiPort}/${endpoints.getList}`, {
+          credentials: 'include',
+          // headers: {
+          //   "Authorization": user.jwt,
+          // }
+          
         }).then(res => {
           return res.json();
         }).then(async passList => {
           //console.log(passList);
           const masterKey = user.masterKey;
+          console.log(masterKey)
           if (!masterKey) {
             throw new Error(`error: masterKey is undefined`);
         } 

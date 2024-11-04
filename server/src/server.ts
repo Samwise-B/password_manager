@@ -3,35 +3,35 @@ import crypto from "crypto";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import cors from 'cors';
-import { verifyToken } from "./utils";
+import { isAuthenticated } from "./utils";
 import { AuthenticatedRequest, getEnvVariable } from "./utils";
 import https from "https";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
 import path from "path";
 import fs from "fs";
-import { get } from "http";
+//import KnexSessionStoreFactory from "connect-session-knex";
+//import {session} from "express-session";
+import knex from "knex";
 
 // add .env configuration
 dotenv.config();
 
+//const KnexSessionStore = require("connect-session-knex")(session);
+
 const sslOptions = {
-  key: fs.readFileSync(path.join(__dirname, '/../cert/live/oceans-end.com/privkey.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '/../cert/live/oceans-end.com/fullchain.pem'))
+  key: fs.readFileSync(path.join(__dirname, '/../certs/live/oceans-end.com/privkey.pem')),
+  cert: fs.readFileSync(path.join(__dirname, '/../certs/live/oceans-end.com/fullchain.pem'))
 };
 
 const corsOptions = {
-  origin: ["https://95.179.228.208", "https://localhost:5432"],
-  optionsSuccessStatus:200
+  origin: ["https://oceans-end.com", "https://localhost:5432", "https://oceans-end.com:3001/"],
+  optionsSuccessStatus:200,
+  credentials: true,
 }
 
 const config = {
   JWT_SECRET: getEnvVariable("JWT_SECRET")
 }
-
-const app: Express = express();
-const port = getEnvVariable("PORT"); // You can choose any port
-
 
 const endpoints = {
   getList: getEnvVariable("API_GET_LIST_ENDPOINT"),
@@ -44,12 +44,14 @@ const endpoints = {
   logout: getEnvVariable("API_LOGOUT_ENDPOINT"),
 }
 
-console.log(endpoints);
+const app: Express = express();
+const port = getEnvVariable("PORT"); // You can choose any port
 
+console.log(endpoints);
 app.use(cors(corsOptions));
 app.use(express.json());
-app.options('*', cors())
-
+app.options('*', cors());
+app.set('trust proxy', 1)
 
 const pool = new Pool({
   user: getEnvVariable("POSTGRES_USER"),
@@ -59,21 +61,43 @@ const pool = new Pool({
   port: parseInt(getEnvVariable("POSTGRES_PORT")),
 })
 
-app.get(`/${endpoints.getList}`, verifyToken, async (req: AuthenticatedRequest, res: Response) => {
+const session = require("express-session");
+const pgSession = require('connect-pg-simple')(session);
+
+app.use(
+  session({
+    store: new pgSession({
+      pool: pool,                // Connection pool
+      tableName: 'sessions',     // Use another table-name than the default "session" one
+      // You can also define other options such as expiration time and session id column
+    }),
+    secret: getEnvVariable("JWT_SECRET"), // Use a secure, random secret in production
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: getEnvVariable("NODE_ENV") === "deployment", // Set secure cookies in production for HTTPS
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      sameSite: "none",
+    },
+  })
+);
+
+app.get(`/${endpoints.getList}`, isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const userId = req.user
+    const userId = req.session.userId;
     console.log(userId);
     const passQuery = "SELECT * FROM user_passwords WHERE user_id = $1 ORDER BY id ASC"
     const result = await pool.query(passQuery, [userId]);
     const passwords = result.rows;
-    return res.json(passwords);
+    res.json(passwords);
   } catch (err) {
     res.status(500).json({error: "Unable to fetch passwords. Please try again later"});
-    throw err;
-  }
+    //throw err;
+  }  
 });
 
-app.post(`/${endpoints.addPass}`, verifyToken, async (req: AuthenticatedRequest, res: Response) => {
+app.post(`/${endpoints.addPass}`, isAuthenticated, async (req: Request, res: Response) => {
   try {
     const {
       username,
@@ -84,21 +108,21 @@ app.post(`/${endpoints.addPass}`, verifyToken, async (req: AuthenticatedRequest,
       salt,
       iv
     } = req.body;
-    const userId = req.user;
+    const userId = req.session.userId;
     console.log(userId);
 
     const insertPassword = "INSERT INTO user_passwords (user_id, username, email, url, label, encrypted_pass, salt, iv) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;";
     const newPassQueryObj = await pool.query(insertPassword, [userId, username, email, url, label, password, salt, iv]);
     const passwordList = await newPassQueryObj.rows[0];
 
-    return res.json(passwordList); 
+    res.json(passwordList); 
   } catch (err) {
     console.log(`Unable to add password: ${err}`);
-    return res.status(500).json({error: "Unable to add password. Please try again later"}) 
+    res.status(500).json({error: "Unable to add password. Please try again later"}) 
   }
 })
  
-app.post(`/${endpoints.updatePass}`, verifyToken, async (req: AuthenticatedRequest, res: Response) => {
+app.post(`/${endpoints.updatePass}`, isAuthenticated, async (req: Request, res: Response) => {
   const {
     username,
     email,
@@ -111,7 +135,7 @@ app.post(`/${endpoints.updatePass}`, verifyToken, async (req: AuthenticatedReque
   } = req.body;
   console.log(req.body);
 
-  const userId = req.user;
+  const userId = req.session.userId;
 
   const updateQuery = `UPDATE user_passwords 
     SET username = $1, email = $2, encrypted_pass = $3, 
@@ -126,9 +150,9 @@ app.post(`/${endpoints.updatePass}`, verifyToken, async (req: AuthenticatedReque
   })
 });
 
-app.post(`/${endpoints.deletePass}`, verifyToken, async (req: AuthenticatedRequest, res: Response) => {
+app.post(`/${endpoints.deletePass}`, isAuthenticated, async (req: Request, res: Response) => {
   const passId = req.body.id;
-  const userId = req.user;
+  const userId = req.session.userId;
 
   const deleteQuery = `DELETE FROM user_passwords WHERE id = $1 AND user_id = $2 RETURNING *;`
 
@@ -150,7 +174,7 @@ app.post(`/${endpoints.loginChallenge}`, async (req: Request, res: Response) => 
   const users = await pool.query(userQuery, [username])
   console.log(users)
   if (users.rowCount == 0) {
-    return res.status(404).json({ success: false, error: "Incorrect username or password."});
+    res.status(404).json({ success: false, error: "Incorrect username or password."});
   }
 
   // generate and store challenge temporarily
@@ -169,7 +193,7 @@ app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response) =>
   const userQuery = "SELECT * FROM users WHERE username = $1;"
   const users = await pool.query(userQuery, [username])
   if (!users) {
-    return res.status(401).json({ error: "Incorrect username or password."});
+    res.status(401).json({ error: "Incorrect username or password."});
   }
   
   const user = users.rows[0] // assumes unique user
@@ -184,17 +208,21 @@ app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response) =>
   console.log(expectedResponse, response)
 
   if (expectedResponse === response) {
-    const token = jwt.sign({ userId: user.id }, config.JWT_SECRET, { expiresIn: '14d' });
+    //const token = jwt.sign({ userId: user.id }, config.JWT_SECRET, { expiresIn: '14d' });
     console.log("signing for:", user.id)
+    req.session.userId = user.username;
+    // res.setHeader('Access-Control-Allow-Credentials', "true");
+    // res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+    // res.setHeader('Access-Control-Allow-Origin', 'https://oceans-end.com');
 
-    return res.json({
+    res.json({
       success: true,
-      token: token,
+      //token: token,
       user: user.username,
       salt: salt,
     })
   } else {
-    return res.status(401).json({ 
+    res.status(401).json({ 
       success:false,
       error: "Incorrect username or password"
     });
@@ -210,7 +238,7 @@ app.post(`/${endpoints.register}`, async (req: Request, res:Response) => {
     const usernameResult = await pool.query(usernameQuery, [username]);
 
     if (usernameResult.rows.length != 0) {
-      return res.status(400).json({
+      res.status(400).json({
         error: "Username already taken"
       });
     }
@@ -228,6 +256,11 @@ app.post(`/${endpoints.register}`, async (req: Request, res:Response) => {
   }
 });
 
+// app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+//   console.error("Error:", error);
+//   res.status(500).json({ message: "An error occurred", error: error.message });
+// });
+
 // app.listen(port, () => {
 //   console.log(`Server is running on port number ${port}`);
 //   console.log({
@@ -239,6 +272,6 @@ app.post(`/${endpoints.register}`, async (req: Request, res:Response) => {
 //   })
 // });
 
-https.createServer(sslOptions, app).listen(443, () => {
+https.createServer(sslOptions, app).listen(3001, () => {
   console.log("Server running on https://oceans-end.com");
 });

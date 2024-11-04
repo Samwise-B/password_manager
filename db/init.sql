@@ -1,0 +1,29 @@
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(256) NOT NULL,
+    key_hash VARCHAR(256) NOT NULL,
+    salt VARCHAR(256) NOT NULL,
+    challenge VARCHAR(256),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_passwords (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    username VARCHAR(30),
+    email VARCHAR(256),
+    url VARCHAR(256),
+    label VARCHAR(256),
+    encrypted_pass VARCHAR(256) NOT NULL,
+    salt VARCHAR(256) NOT NULL,
+    iv VARCHAR(256) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    sid varchar(255) PRIMARY KEY,
+    expire TIMESTAMP NOT NULL,
+    sess json
+);

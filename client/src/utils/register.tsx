@@ -8,7 +8,7 @@ export async function registerUser(username: string, masterPassword: string) {
     console.log(derivedKey, hashedKey);
 
     try {
-        const regResponse = await fetch(`https://${apiHost}:${apiPort}/${endpoints.register}`, {
+        const regResponse = await fetch(`${apiHost}:${apiPort}/${endpoints.register}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -18,6 +18,7 @@ export async function registerUser(username: string, masterPassword: string) {
                 hashedKey: hashedKey,
                 salt: salt,
             }),
+            credentials: 'include'
         });
 
         if (!regResponse.ok) {

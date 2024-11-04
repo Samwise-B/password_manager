@@ -37,7 +37,7 @@ export function AuthProvider({ children }: IAuthProps) {
         const password = data.password;
 
         try {
-            const challengeResponse = await fetch(`http://${apiHost}:${apiPort}/${endpoints.loginChallenge}`, {
+            const challengeResponse = await fetch(`${apiHost}:${apiPort}/${endpoints.loginChallenge}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: IAuthProps) {
             const challengeString = await generateChallengeResponse(password, challenge, salt);
             console.log(username, challengeString, challenge);
 
-            const verifyResponse = await fetch(`http://${apiHost}:${apiPort}/${endpoints.verifyChallenge}`, {
+            const verifyResponse = await fetch(`${apiHost}:${apiPort}/${endpoints.verifyChallenge}`, {
                 method: "POST",
                 headers: {
                     'Content-Type': "application/json",
@@ -73,10 +73,11 @@ export function AuthProvider({ children }: IAuthProps) {
             if (result.success) {
                 //console.log("Successful Authentication!", result.user, result.token);
                 setUser(result.user);
-                setJwt(result.token);
+                //setJwt(result.token);
                 localStorage.setItem("site", result.token);
                 const masterKey = await deriveKey(password, salt);
                 SetMasterKey(masterKey);
+                console.log("success", masterKey)
                 //localStorage.setItem("key", masterKey)
                 return "";
             }
