@@ -1,4 +1,4 @@
-import {useContext, createContext, useState, ReactNode} from "react";
+import { useContext, createContext, useState, ReactNode } from "react";
 import { generateChallengeResponse, deriveKey } from "./utils/encryption";
 import { registerUser } from "./utils/register";
 import { apiHost, apiPort, endpoints } from "./App";
@@ -27,7 +27,7 @@ const AuthContext = createContext<AuthContext>({} as AuthContext);
 export function AuthProvider({ children }: IAuthProps) {
     const [user, setUser] = useState(null);
     //const [salt, setSalt] = useState("");
-    const [masterKey, SetMasterKey] = useState<CryptoKey|null>(null);
+    const [masterKey, SetMasterKey] = useState<CryptoKey | null>(null);
     const [jwt, setJwt] = useState(localStorage.getItem("site") || "");
     //const [err, setErr] = useState<string>("");
 
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: IAuthProps) {
         const password = data.password;
 
         try {
-            const challengeResponse = await fetch(`${apiHost}:${apiPort}/${endpoints.loginChallenge}`, {
+            const challengeResponse = await fetch(`${apiHost}/${endpoints.loginChallenge}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: IAuthProps) {
             const challengeString = await generateChallengeResponse(password, challenge, salt);
             console.log(username, challengeString, challenge);
 
-            const verifyResponse = await fetch(`${apiHost}:${apiPort}/${endpoints.verifyChallenge}`, {
+            const verifyResponse = await fetch(`${apiHost}/${endpoints.verifyChallenge}`, {
                 method: "POST",
                 headers: {
                     'Content-Type': "application/json",
@@ -108,7 +108,7 @@ export function AuthProvider({ children }: IAuthProps) {
     }
 
     return (
-        <AuthContext.Provider value={{user, jwt, masterKey, login, regUser, logout}}>
+        <AuthContext.Provider value={{ user, jwt, masterKey, login, regUser, logout }}>
             {children}
         </AuthContext.Provider>
     );

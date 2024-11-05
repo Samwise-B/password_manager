@@ -8,12 +8,12 @@ export async function registerUser(username: string, masterPassword: string) {
     console.log(derivedKey, hashedKey);
 
     try {
-        const regResponse = await fetch(`${apiHost}:${apiPort}/${endpoints.register}`, {
+        const regResponse = await fetch(`${apiHost}/${endpoints.register}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 username: username,
                 hashedKey: hashedKey,
                 salt: salt,
@@ -25,8 +25,8 @@ export async function registerUser(username: string, masterPassword: string) {
             const error = await regResponse.json();
             throw new Error(error.error);
         }
-        return {err: null, key: masterPassword, salt: salt}
+        return { err: null, key: masterPassword, salt: salt }
     } catch (err: any) {
-        return {err: err.message, key:"", salt:""}
+        return { err: err.message, key: "", salt: "" }
     }
 }

@@ -24,7 +24,7 @@ export const endpoints = {
   logout: import.meta.env.VITE_API_LOGOUT,
 }
 export const apiHost = import.meta.env.VITE_API_HOST;
-export const apiPort = import.meta.env.VITE_API_PORT;
+export const apiPort = import.meta.env.VITE_API_PORT ? import.meta.env.VITE_API_PORT : "";
 
 
 interface navigationProps {
@@ -37,19 +37,19 @@ interface OffCanvasProps {
   //renderCanvasContent: () => React.ReactNode;
   show: boolean;
   setShow: (val: boolean) => void;
-  canvasContent: string; 
-  passList: Array<PasswordListItem>; 
-  currentIndex: number; 
-  UpdatePassList: ({id, username, email, password, url, label, salt, iv}: PasswordListItem, operation: string) => void; 
-  AddToPassList: ({id, username, email, label, password, url, salt, iv}: PasswordListItem) => void;
-  handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void;
+  canvasContent: string;
+  passList: Array<PasswordListItem>;
+  currentIndex: number;
+  UpdatePassList: ({ id, username, email, password, url, label, salt, iv }: PasswordListItem, operation: string) => void;
+  AddToPassList: ({ id, username, email, label, password, url, salt, iv }: PasswordListItem) => void;
+  handleError: (errorCode: string, errorMessageShort: string, errorMessageFull: string) => void;
 }
 
 interface ISearchBarProps {
   filterPL: (substring: string) => void;
 }
 
-function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigationProps) {
+function Navigation({ onGeneratorClick, onBankClick, onNewPasswordClick }: navigationProps) {
   const [isBankActive, setIsBankActive] = useState<boolean>(true);
   const [isGenActive, setIsGenActive] = useState<boolean>(false);
 
@@ -94,12 +94,12 @@ function Navigation({onGeneratorClick, onBankClick, onNewPasswordClick}: navigat
           <button type="button" className="btn btn-secondary mx-2 align-items-center" onClick={onNewPasswordClick} data-bs-toggle="offcanvas" data-bs-target="#offCanvasWindow"><i className="bi bi-plus"></i></button>
         </div>
       </div>
-      
+
     </header>
   )
 }
 
-function Search({filterPL}: ISearchBarProps) {
+function Search({ filterPL }: ISearchBarProps) {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const searchString = e.target.value.toLowerCase();
@@ -109,13 +109,13 @@ function Search({filterPL}: ISearchBarProps) {
   return (
     <>
       <div className='container-fluid input-group py-3 border-bottom border-secondary'>
-        <input className="form-control border-secondary" type="text" id="generatedPassword" placeholder='Search' onChange={handleChange}></input>    
+        <input className="form-control border-secondary" type="text" id="generatedPassword" placeholder='Search' onChange={handleChange}></input>
       </div>
     </>
   )
 }
 
-function OffCanvasWindow({canvasContent, passList, currentIndex, UpdatePassList, AddToPassList, show, setShow, handleError} : OffCanvasProps) {
+function OffCanvasWindow({ canvasContent, passList, currentIndex, UpdatePassList, AddToPassList, show, setShow, handleError }: OffCanvasProps) {
 
   const handleClose = () => {
     console.log("handle close");
@@ -126,20 +126,20 @@ function OffCanvasWindow({canvasContent, passList, currentIndex, UpdatePassList,
   function renderCanvasContent() {
     if (canvasContent == "details") {
       return (
-        <PassDetails 
-        passList={passList} 
-        currentIndex={currentIndex}
-        updatePassList={UpdatePassList}
-        handleClose={handleClose}
-        handleError={handleError}
+        <PassDetails
+          passList={passList}
+          currentIndex={currentIndex}
+          updatePassList={UpdatePassList}
+          handleClose={handleClose}
+          handleError={handleError}
         />
       )
     } else if (canvasContent == "add_pass") {
-      return <PasswordCreator 
+      return <PasswordCreator
         updatePasswordList={AddToPassList}
-        handleClose={handleClose} 
+        handleClose={handleClose}
         handleError={handleError}
-        />
+      />
     }
   }
 
@@ -163,14 +163,14 @@ function Body() {
   const user = useAuth();
 
 
-  function handleError(errorCode: string, errorMessageShort:string, errorMessageFull:string) {
+  function handleError(errorCode: string, errorMessageShort: string, errorMessageFull: string) {
     setErrorCode(errorCode);
     setErrorMessageShort(errorMessageShort);
     setErrorMessageFull(errorMessageFull);
     setBodyContent("error")
   }
-  
-  function AddToPasswordList({id, username, email, label, password, url, salt, iv}: PasswordListItem) {
+
+  function AddToPasswordList({ id, username, email, label, password, url, salt, iv }: PasswordListItem) {
     // add password on backend
     const newArr = [...passwordList];
     newArr.push({
@@ -187,20 +187,20 @@ function Body() {
     setBodyContent("passbank");
   }
 
-  function UpdatePasswordList({id, username, email, password, url, label, salt, iv}: PasswordListItem, operation: string) {
+  function UpdatePasswordList({ id, username, email, password, url, label, salt, iv }: PasswordListItem, operation: string) {
     if (operation == "update") {
       const newPassList = passwordList.map((passItem) => {
         if (passItem.id == id) {
-            return {
-              id: id,
-              username: username,
-              email: email,
-              label: label,
-              password: password,
-              url: url,
-              salt: salt,
-              iv: iv
-            };
+          return {
+            id: id,
+            username: username,
+            email: email,
+            label: label,
+            password: password,
+            url: url,
+            salt: salt,
+            iv: iv
+          };
         } else {
           return passItem;
         }
@@ -233,24 +233,24 @@ function Body() {
 
   function renderBody() {
     if (!user.jwt) {
-      return <Login/>
+      return <Login />
     }
     else if (bodyContent == "passbank") {
       return (
         <>
-          <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
-          <Search filterPL={setFilterString}/>
-          <PassBank 
-          filterString={filterString}
-          passwordList={passwordList}
-          onPassItemClick={onPassItemClick}
-          setPassList={setPasswordList}
+          <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick} />
+          <Search filterPL={setFilterString} />
+          <PassBank
+            filterString={filterString}
+            passwordList={passwordList}
+            onPassItemClick={onPassItemClick}
+            setPassList={setPasswordList}
           />
           <OffCanvasWindow
-            canvasContent={canvasContent} 
-            passList={passwordList} 
-            currentIndex={currentPassIndex} 
-            show={showOffcanvas} 
+            canvasContent={canvasContent}
+            passList={passwordList}
+            currentIndex={currentPassIndex}
+            show={showOffcanvas}
             setShow={setShowOffcanvas}
             AddToPassList={AddToPasswordList}
             UpdatePassList={UpdatePasswordList}
@@ -258,19 +258,19 @@ function Body() {
           />
         </>
       );
-    } 
+    }
     else if (bodyContent == "generator") {
       return (
         <>
-          <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick}/>
+          <Navigation onGeneratorClick={onGeneratorClick} onBankClick={onBankClick} onNewPasswordClick={onNewPasswordClick} />
           <div className='container'>
-            <Generator readonlyPassword={true}/>
+            <Generator readonlyPassword={true} />
           </div>
-          <OffCanvasWindow 
-            canvasContent={canvasContent} 
-            passList={passwordList} 
-            currentIndex={currentPassIndex} 
-            show={showOffcanvas} 
+          <OffCanvasWindow
+            canvasContent={canvasContent}
+            passList={passwordList}
+            currentIndex={currentPassIndex}
+            show={showOffcanvas}
             setShow={setShowOffcanvas}
             AddToPassList={AddToPasswordList}
             UpdatePassList={UpdatePasswordList}
@@ -280,17 +280,17 @@ function Body() {
       )
     } else {
       return (
-        <ErrorPage 
-          errorCode={errorCode} 
-          errorMessageShort={errorMessageShort} 
-          errorMessageFull={errorMessageFull}/>
+        <ErrorPage
+          errorCode={errorCode}
+          errorMessageShort={errorMessageShort}
+          errorMessageFull={errorMessageFull} />
       )
     }
   }
 
   return (
     <>
-          {renderBody()}
+      {renderBody()}
     </>
   )
 }
@@ -299,7 +299,7 @@ function App() {
   return (
     <AuthProvider>
       <div className='App'>
-        <Body/>
+        <Body />
       </div>
     </AuthProvider>
   )
