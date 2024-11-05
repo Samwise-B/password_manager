@@ -269,6 +269,6 @@ app.post(`/${endpoints.register}`, async (req: Request, res: Response): Promise<
 //   })
 // });
 
-https.createServer(sslOptions, app).listen(3001, () => {
+https.createServer(sslOptions, app).listen(3001, "0.0.0.0", () => {
   console.log("Server running on https://oceans-end.com");
 });
