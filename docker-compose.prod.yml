@@ -39,8 +39,6 @@ services:
       - API_REGISTER_ENDPOINT=$API_REGISTER_ENDPOINT
       - API_LOGOUT_ENDPOINT=$API_LOGOUT_ENDPOINT
       - JWT_SECRET=$JWT_SECRET
-    ports:
-      - $API_PORT:$API_PORT
     networks:
       - api-network
     volumes:
@@ -68,8 +66,6 @@ services:
     volumes:
       - ./client/build:/app/build
       - ./certs:/app/certs
-    ports:
-      - "3000:3000"
     networks:
       - api-network
 
