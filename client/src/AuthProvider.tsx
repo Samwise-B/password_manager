@@ -1,7 +1,7 @@
 import { useContext, createContext, useState, ReactNode } from "react";
 import { generateChallengeResponse, deriveKey } from "./utils/encryption";
 import { registerUser } from "./utils/register";
-import { apiHost, apiPort, endpoints } from "./App";
+import { apiHost, endpoints } from "./App";
 
 interface IAuthProps {
     children: ReactNode;

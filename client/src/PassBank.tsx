@@ -3,7 +3,7 @@ import { base64ToUint8Array, decryptPassword } from "./utils/encryption";
 import { useAuth } from "./AuthProvider";
 import { LoadingAnimation } from "./LoadingAnimation";
 import { passBankProps, passBankItemProps, PasswordListItem, EmptyPassListProps } from "./types";
-import { apiHost, apiPort, endpoints } from "./App";
+import { apiHost, endpoints } from "./App";
 
 export function PassBank({ passwordList, filterString, onPassItemClick, setPassList }: passBankProps) {
   const user = useAuth();

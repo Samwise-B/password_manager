@@ -1,5 +1,5 @@
 import { arrayBufferToBase64, deriveKeyLogin, hashDerivedKeyToBase64 } from "./encryption";
-import { apiHost, apiPort, endpoints } from "../App";
+import { apiHost, endpoints } from "../App";
 
 export async function registerUser(username: string, masterPassword: string) {
     const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));

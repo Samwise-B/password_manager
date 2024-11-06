@@ -1,5 +1,5 @@
 import { encryptPassword, arrayBufferToBase64 } from "./encryption";
-import { apiHost, apiPort, endpoints } from "../App";
+import { apiHost, endpoints } from "../App";
 
 export interface IAddPassword {
     username: string;
