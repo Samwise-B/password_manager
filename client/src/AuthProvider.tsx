@@ -1,6 +1,7 @@
 import { useContext, createContext, useState, ReactNode } from "react";
 import { generateChallengeResponse, deriveKey } from "./utils/encryption";
 import { registerUser } from "./utils/register";
+import { getCookie } from "./utils/cookies";
 import { apiHost, endpoints } from "./App";
 
 interface IAuthProps {
@@ -14,7 +15,7 @@ interface ILoginForm {
 
 interface AuthContext {
     user: string | null,
-    jwt: string,
+    session: string,
     masterKey: CryptoKey | null,
     login: (data: ILoginForm) => Promise<string>,
     regUser: (data: ILoginForm) => Promise<string>,
@@ -28,7 +29,7 @@ export function AuthProvider({ children }: IAuthProps) {
     const [user, setUser] = useState(null);
     //const [salt, setSalt] = useState("");
     const [masterKey, SetMasterKey] = useState<CryptoKey | null>(null);
-    const [jwt, setJwt] = useState(localStorage.getItem("site") || "");
+    const [session, setSession] = useState(getCookie("connect.sid"));
     //const [err, setErr] = useState<string>("");
 
 
@@ -74,7 +75,7 @@ export function AuthProvider({ children }: IAuthProps) {
                 //console.log("Successful Authentication!", result.user, result.token);
                 setUser(result.user);
                 //setJwt(result.token);
-                localStorage.setItem("site", result.token);
+                //localStorage.setItem("site", result.token);
                 const masterKey = await deriveKey(password, salt);
                 SetMasterKey(masterKey);
                 console.log("success", masterKey)
@@ -95,6 +96,7 @@ export function AuthProvider({ children }: IAuthProps) {
             return res.err;
         } else {
             const salt = res.salt;
+            setSession(getCookie("connect.sid"));
             const masterKey = await deriveKey(password, salt);
             SetMasterKey(masterKey)
         }
@@ -102,13 +104,13 @@ export function AuthProvider({ children }: IAuthProps) {
 
     async function logout() {
         setUser(null);
-        setJwt("");
+        setSession("");
         SetMasterKey(null);
         localStorage.removeItem("site");
     }
 
     return (
-        <AuthContext.Provider value={{ user, jwt, masterKey, login, regUser, logout }}>
+        <AuthContext.Provider value={{ user, session, masterKey, login, regUser, logout }}>
             {children}
         </AuthContext.Provider>
     );

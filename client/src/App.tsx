@@ -235,7 +235,7 @@ function Body() {
   }
 
   function renderBody() {
-    if (!user.jwt) {
+    if (!user.user) {
       return <Login />
     }
     else if (bodyContent == "passbank") {

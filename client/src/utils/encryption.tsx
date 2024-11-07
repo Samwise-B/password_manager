@@ -10,7 +10,7 @@ export function deriveKey(masterPassword: string, salt: string) {
     return window.crypto.subtle.importKey(
         "raw",
         passwordBuffer,
-        { name: "PBKDF2"},
+        { name: "PBKDF2" },
         false,
         ["deriveKey"]
     ).then(key => {
@@ -43,7 +43,7 @@ export async function deriveKeyLogin(masterPassword: string, salt: string) {
         false,
         ["deriveKey"]
     );
-    
+
     return await crypto.subtle.deriveKey(
         {
             name: "PBKDF2",
@@ -58,7 +58,7 @@ export async function deriveKeyLogin(masterPassword: string, salt: string) {
     );
 }
 
-export function encryptPassword(plaintextPassword:string, key:CryptoKey) {
+export function encryptPassword(plaintextPassword: string, key: CryptoKey) {
     const encoder = new TextEncoder();
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
@@ -113,7 +113,7 @@ export async function hashDerivedKeyToCryptoKey(key: CryptoKey) {
     const hashedKey = await crypto.subtle.importKey(
         "raw",
         hashedKeyBuffer,
-        { name:"HMAC", hash:"SHA-256" },
+        { name: "HMAC", hash: "SHA-256" },
         true,
         ["sign"]
     )
@@ -140,10 +140,10 @@ export function base64ToUint8Array(base64: string) {
         bytes[i] = binaryString.charCodeAt(i);
     }
     return bytes;
-  }
- 
+}
 
-export async function generateChallengeResponse(password: string, challenge: string, salt:string) {
+
+export async function generateChallengeResponse(password: string, challenge: string, salt: string) {
     const key = await deriveKeyLogin(password, salt);
     const hashedKey = await hashDerivedKeyToCryptoKey(key);
 

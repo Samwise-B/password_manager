@@ -7,7 +7,6 @@ export interface IAddPassword {
     url: string;
     label: string;
     password: string;
-    jwt: string;
     masterKey: CryptoKey | null;
     handleError: (errorCode: string, errorMessageShort: string, errorMessageFull: string) => void;
 }
@@ -19,7 +18,6 @@ export interface IUpdatePassword {
     url: string;
     label: string;
     password: string;
-    jwt: string;
     masterKey: CryptoKey | null;
     handleError: (errorCode: string, errorMessageShort: string, errorMessageFull: string) => void
 }
@@ -64,7 +62,7 @@ export async function useAddPassword({ username, email, password, url, label, ma
             console.log("added password");
             const result = await res.json();
             result['password'] = password;
-            delete result.encrypted_password;
+            delete result.encrypted_pass;
             console.log(result);
             return result
         }
@@ -117,7 +115,7 @@ export async function useUpdatePassword({ id, site_favicon, username, email, pas
             const result = await res.json();
 
             result['password'] = password;
-            delete result.encrypted_password;
+            delete result.encrypted_pass;
             console.log(result);
 
             return result;

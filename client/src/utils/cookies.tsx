@@ -4,6 +4,14 @@ export async function cryptoKeyToCookieString(key: CryptoKey) {
     return btoa(JSON.stringify(exportedKey));  // Convert JWK to base64 string
   }
 
+export const getCookie = (name:string) => {
+  const cookies = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`));
+  
+  return cookies ? cookies.split("=")[1] : "";
+  };
+
 // function setCookie(name:string, value:string, days:number) {
 //     let expires = "";
 //     if (days) {

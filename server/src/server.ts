@@ -207,7 +207,7 @@ app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response): P
   if (expectedResponse === response) {
     //const token = jwt.sign({ userId: user.id }, config.JWT_SECRET, { expiresIn: '14d' });
     console.log("signing for:", user.id)
-    req.session.userId = user.username;
+    req.session.userId = user.id;
     // res.setHeader('Access-Control-Allow-Credentials', "true");
     // res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
     // res.setHeader('Access-Control-Allow-Origin', 'https://oceans-end.com');
@@ -215,7 +215,7 @@ app.post(`/${endpoints.verifyChallenge}`, async (req: Request, res: Response): P
     return res.json({
       success: true,
       //token: token,
-      user: user.username,
+      user: user.id,
       salt: salt,
     })
   } else {

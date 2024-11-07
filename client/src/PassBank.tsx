@@ -21,7 +21,7 @@ export function PassBank({ passwordList, filterString, onPassItemClick, setPassL
       }).then(res => {
         return res.json();
       }).then(async passList => {
-        //console.log(passList);
+        console.log("fetched passwords", passList);
         const masterKey = user.masterKey;
         console.log(masterKey)
         if (!masterKey) {
@@ -30,7 +30,7 @@ export function PassBank({ passwordList, filterString, onPassItemClick, setPassL
         for (let i = 0; i < passList.length; i++) {
           const encryptedData = {
             iv: base64ToUint8Array(passList[i].iv),
-            ciphertext: base64ToUint8Array(passList[i].encrypted_password)
+            ciphertext: base64ToUint8Array(passList[i].encrypted_pass)
           }
           //console.log(encryptedData)
           const password = await decryptPassword(encryptedData, masterKey);
@@ -46,7 +46,7 @@ export function PassBank({ passwordList, filterString, onPassItemClick, setPassL
     };
 
     fetchPassList();
-  }, [])
+  }, [user])
 
   function filterPasswordList(substring: string) {
     let newFilteredPL: Array<PasswordListItem> = [];
