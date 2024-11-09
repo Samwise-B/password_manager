@@ -34,7 +34,7 @@ All encryption is implemented using JavaScript’s built-in WebCrypto API, ensur
 2. **Run the Application**:
    Use Docker Compose to build and run the application:
    ```bash
-      docker-compose up```
+      docker-compose up
 
 3. **Deployment**: The server is deployed on a Virtual Private Server (VPS) for secure remote access and scalability.
 
