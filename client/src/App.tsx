@@ -24,10 +24,12 @@ export const endpoints = {
   logout: import.meta.env.VITE_API_LOGOUT,
 }
 
+
 console.log("endpoints", endpoints);
 
 export const apiHost = import.meta.env.VITE_API_HOST;
 export const apiPort = import.meta.env.VITE_API_PORT ? import.meta.env.VITE_API_PORT : "";
+console.log("api", apiHost);
 
 
 interface navigationProps {

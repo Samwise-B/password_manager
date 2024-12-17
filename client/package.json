@@ -12,7 +12,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "serve -s build -l 3000 --ssl-cert 'certs/live/oceans-end.com/fullchain.pem' --ssl-key 'certs/live/oceans-end.com/privkey.pem'"
+    "start": "serve -s build -l 3000"
   },
   "dependencies": {
     "@eslint/js": "^9.9.0",

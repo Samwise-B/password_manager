@@ -15,13 +15,13 @@ dotenv.config();
 
 //const KnexSessionStore = require("connect-session-knex")(session);
 
-const sslOptions = {
-  key: fs.readFileSync(path.join(__dirname, '/../certs/live/oceans-end.com/privkey.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '/../certs/live/oceans-end.com/fullchain.pem'))
-};
+// const sslOptions = {
+//   key: fs.readFileSync(path.join(__dirname, '/../certs/live/oceans-end.com/privkey.pem')),
+//   cert: fs.readFileSync(path.join(__dirname, '/../certs/live/oceans-end.com/fullchain.pem'))
+// };
 
 const corsOptions = {
-  origin: ["https://oceans-end.com", "https://localhost:5432", "https://oceans-end.com:3001/"],
+  origin: ["https://oceans-end.com", "https://oceans-end.com"],
   optionsSuccessStatus: 200,
   credentials: true,
 }
@@ -42,7 +42,7 @@ const endpoints = {
 }
 
 const app: Express = express();
-const port = getEnvVariable("PORT"); // You can choose any port
+const port = getEnvVariable("API_PORT"); // You can choose any port
 
 console.log(endpoints);
 app.use(cors(corsOptions));
@@ -52,10 +52,10 @@ app.set('trust proxy', 1)
 
 const pool = new Pool({
   user: getEnvVariable("POSTGRES_USER"),
-  host: getEnvVariable("PGHOST"),
+  host: getEnvVariable("POSTGRES_HOST"),
   database: getEnvVariable("POSTGRES_DB"),
   password: getEnvVariable("POSTGRES_PASSWORD"),
-  port: parseInt(getEnvVariable("POSTGRES_PORT")),
+  port: parseInt(getEnvVariable("POSTGRES_PORT"))
 })
 
 const session = require("express-session");
@@ -75,7 +75,7 @@ app.use(
       httpOnly: true,
       secure: getEnvVariable("NODE_ENV") === "deployment", // Set secure cookies in production for HTTPS
       maxAge: 24 * 60 * 60 * 1000, // 1 day
-      sameSite: "none",
+      sameSite: "Strict",
     },
   })
 );
@@ -258,17 +258,17 @@ app.post(`/${endpoints.register}`, async (req: Request, res: Response): Promise<
 //   res.status(500).json({ message: "An error occurred", error: error.message });
 // });
 
-// app.listen(port, () => {
-//   console.log(`Server is running on port number ${port}`);
-//   console.log({
-//     user: process.env.POSTGRES_USER,
-//     host: process.env.PGHOST,
-//     database: process.env.POSTGRES_DB,
-//     password: process.env.POSTGRES_PASSWORD,
-//     port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT): undefined,
-//   })
-// });
-
-https.createServer(sslOptions, app).listen(3001, "0.0.0.0", () => {
-  console.log(`Server running on https://localhost, port ${3001}`);
+app.listen(port, () => {
+  console.log(`Server is running on port number ${port}`);
+  console.log({
+    user: process.env.POSTGRES_USER,
+    host: process.env.POSTGRES_HOST,
+    database: process.env.POSTGRES_DB,
+    password: process.env.POSTGRES_PASSWORD,
+    port: process.env.POSTGRES_PORT ? parseInt(process.env.POSTGRES_PORT) : undefined,
+  })
 });
+
+// https.createServer(sslOptions, app).listen(3001, "0.0.0.0", () => {
+//   console.log(`Server running on https://localhost, port ${3001}`);
+// });
