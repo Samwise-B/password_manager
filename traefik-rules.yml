@@ -1,0 +1,29 @@
+http:
+  routers:
+    passmanager-frontend:
+      rule: "Host(`localhost`)"
+      entryPoints:
+        - websecure
+      tls:
+        {}
+      service: passmanager-frontend
+      priority: 1
+    passmanager-api:
+      rule: "Host(`localhost`) && PathPrefix(`/api`)"
+      entryPoints:
+        - websecure
+      tls:
+        {}
+      service: passmanager-api
+      priority: 2
+  
+  services:
+    passmanager-frontend:
+      loadBalancer:
+        servers:
+          - url: "http://passmanager-frontend:3000"
+    passmanager-api:
+      loadBalancer:
+        servers:
+          - url: "http://passmanager-api:3001"
+        

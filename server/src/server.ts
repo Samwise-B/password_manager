@@ -9,6 +9,7 @@ import https from "https";
 import jwt from "jsonwebtoken";
 import path from "path";
 import fs from "fs";
+import { get } from "http";
 
 // add .env configuration
 dotenv.config();
@@ -20,8 +21,16 @@ dotenv.config();
 //   cert: fs.readFileSync(path.join(__dirname, '/../certs/live/oceans-end.com/fullchain.pem'))
 // };
 
+const env_mode = getEnvVariable("NODE_ENV");
+let origin;
+if (env_mode === "development") {
+  origin = ["http://localhost:3000"];
+} else {
+  origin = ["https://oceans-end.com", "https://oceans-end.com"]
+}
+
 const corsOptions = {
-  origin: ["https://oceans-end.com", "https://oceans-end.com"],
+  origin: origin,
   optionsSuccessStatus: 200,
   credentials: true,
 }
@@ -73,9 +82,9 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: getEnvVariable("NODE_ENV") === "deployment", // Set secure cookies in production for HTTPS
+      secure: true, // Set secure cookies in production for HTTPS
       maxAge: 24 * 60 * 60 * 1000, // 1 day
-      sameSite: "Strict",
+      sameSite: getEnvVariable("NODE_ENV") === "deployment" ? "Strict": "None",
     },
   })
 );
