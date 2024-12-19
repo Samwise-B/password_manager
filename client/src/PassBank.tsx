@@ -1,18 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { base64ToUint8Array, decryptPassword } from "./utils/encryption";
 import { useAuth } from "./AuthProvider";
 import { LoadingAnimation } from "./LoadingAnimation";
 import { passBankProps, passBankItemProps, PasswordListItem, EmptyPassListProps } from "./types";
-import { apiHost, endpoints } from "./App";
+//import { apiHost, endpoints } from "./App";
+import { EndpointContext } from "./EndpointContext";
 
 export function PassBank({ passwordList, filterString, onPassItemClick, setPassList }: passBankProps) {
   const user = useAuth();
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const endpoints = useContext(EndpointContext);
 
   useEffect(() => {
     const fetchPassList = async () => {
       console.log(user);
-      fetch(`${apiHost}/${endpoints.getList}`, {
+      fetch(`${endpoints.apiHost}/${endpoints.getList}`, {
         credentials: 'include',
         // headers: {
         //   "Authorization": user.jwt,

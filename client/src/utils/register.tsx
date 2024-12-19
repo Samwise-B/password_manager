@@ -1,14 +1,17 @@
 import { arrayBufferToBase64, deriveKeyLogin, hashDerivedKeyToBase64 } from "./encryption";
-import { apiHost, endpoints } from "../App";
+import { useContext } from "react";
+import { EndpointContext } from "../EndpointContext";
+
 
 export async function registerUser(username: string, masterPassword: string) {
+    const endpoints = useContext(EndpointContext);
     const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
     const derivedKey = await deriveKeyLogin(masterPassword, salt);
     const hashedKey = await hashDerivedKeyToBase64(derivedKey);
     console.log(derivedKey, hashedKey);
 
     try {
-        const regResponse = await fetch(`${apiHost}/${endpoints.register}`, {
+        const regResponse = await fetch(`${endpoints.apiHost}/${endpoints.register}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

@@ -1,6 +1,6 @@
 import { passDetailProps, IEditButtonProps, PasswordListItem } from './types';
 import Offcanvas from 'react-bootstrap/Offcanvas';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { useForm, useFormContext, FormProvider } from "react-hook-form"
 import { ErrorMessage } from "@hookform/error-message";
 import { useDeletePassword, useUpdatePassword } from './utils/addPassword';
@@ -9,6 +9,7 @@ import { ErrorPage } from './ErrorPage';
 import { useAuth } from './AuthProvider';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
+import { EndpointContext } from "./EndpointContext";
 
 export function PassDetails({ passList, currentIndex, updatePassList, handleClose, handleError }: passDetailProps) {
   const [passInputType, setPassInputType] = useState<string>("password");
@@ -18,6 +19,7 @@ export function PassDetails({ passList, currentIndex, updatePassList, handleClos
   const [showPassword, setShowPassword] = useState<string>("Show");
   const [hasChanged, setHasChanged] = useState<boolean>(false);
   const user = useAuth();
+  const endpoints = useContext(EndpointContext);
   const methods = useForm({
     defaultValues: {
       ...passItem
@@ -72,6 +74,7 @@ export function PassDetails({ passList, currentIndex, updatePassList, handleClos
         url: data.url,
         label: data.label,
         masterKey: user.masterKey,
+        endpoints: endpoints,
         handleError: handleError
       });
       if (updatedPassword) {
@@ -305,13 +308,14 @@ interface IDeletePassword {
 
 export function DeleteButton({ passItem, updatePassList, closeOffCanvas }: IDeletePassword) {
   const [show, setShow] = useState<boolean>(false);
+  const endpoints = useContext(EndpointContext);
   //const user = useAuth();
 
   const handleShow = () => setShow(true);
   const handleClose = () => setShow(false);
 
   async function deletePassword() {
-    const deletedPassword = await useDeletePassword(passItem.id);
+    const deletedPassword = await useDeletePassword(passItem.id, endpoints);
 
     if (deletedPassword) {
       updatePassList({ ...passItem }, "delete");

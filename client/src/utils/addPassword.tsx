@@ -1,5 +1,6 @@
 import { encryptPassword, arrayBufferToBase64 } from "./encryption";
-import { apiHost, endpoints } from "../App";
+//import { apiHost, endpoints } from "../App";
+import { IEndpointContext } from "../EndpointContext";
 
 export interface IAddPassword {
     username: string;
@@ -8,6 +9,7 @@ export interface IAddPassword {
     label: string;
     password: string;
     masterKey: CryptoKey | null;
+    endpoints: IEndpointContext;
     handleError: (errorCode: string, errorMessageShort: string, errorMessageFull: string) => void;
 }
 export interface IUpdatePassword {
@@ -19,15 +21,17 @@ export interface IUpdatePassword {
     label: string;
     password: string;
     masterKey: CryptoKey | null;
+    endpoints: IEndpointContext;
     handleError: (errorCode: string, errorMessageShort: string, errorMessageFull: string) => void
 }
 
 export interface IDeletePassword {
     id: number;
+    endpoints: IEndpointContext;
     handleError: (errorCode: string, errorMessageShort: string, errorMessageFull: string) => void
 }
 
-export async function useAddPassword({ username, email, password, url, label, masterKey }: IAddPassword) {
+export async function useAddPassword({ username, email, password, url, label, masterKey, endpoints }: IAddPassword) {
     console.log({ username, email, password, url, label });
     const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
 
@@ -47,7 +51,7 @@ export async function useAddPassword({ username, email, password, url, label, ma
             iv: arrayBufferToBase64(encryptedPassword.iv)
         };
 
-        const res = await fetch(`${apiHost}/${endpoints.addPass}`, {
+        const res = await fetch(`${endpoints.apiHost}/${endpoints.addPass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
@@ -77,7 +81,7 @@ export async function useAddPassword({ username, email, password, url, label, ma
     }
 }
 
-export async function useUpdatePassword({ id, site_favicon, username, email, password, url, label, masterKey }: IUpdatePassword) {
+export async function useUpdatePassword({ id, site_favicon, username, email, password, url, label, masterKey, endpoints }: IUpdatePassword) {
     console.log({ site_favicon, username, email, password, url });
     //const masterKey = "secretpassword";
     // generate new encryption key & encrypt password
@@ -99,7 +103,7 @@ export async function useUpdatePassword({ id, site_favicon, username, email, pas
             iv: arrayBufferToBase64(encryptedPassword.iv)
         };
 
-        const res = await fetch(`${apiHost}/${endpoints.updatePass}`, {
+        const res = await fetch(`${endpoints.apiHost}/${endpoints.updatePass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',
@@ -127,10 +131,11 @@ export async function useUpdatePassword({ id, site_favicon, username, email, pas
     }
 };
 
-export async function useDeletePassword(id: number) {
+export async function useDeletePassword(id: number, endpoints: IEndpointContext) {
     console.log("deleting:", id);
+
     try {
-        const res = await fetch(`${apiHost}/${endpoints.deletePass}`, {
+        const res = await fetch(`${endpoints.apiHost}/${endpoints.deletePass}`, {
             method: "POST",
             headers: {
                 'Accept': 'application/json',

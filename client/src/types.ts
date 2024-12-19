@@ -14,11 +14,33 @@ export type EncryptedData = {
     ciphertext: Uint8Array
 }
 
+export interface OffCanvasProps {
+    //renderCanvasContent: () => React.ReactNode;
+    show: boolean;
+    setShow: (val: boolean) => void;
+    canvasContent: string;
+    passList: Array<PasswordListItem>;
+    currentIndex: number;
+    UpdatePassList: ({ id, username, email, password, url, label, salt, iv }: PasswordListItem, operation: string) => void;
+    AddToPassList: ({ id, username, email, label, password, url, salt, iv }: PasswordListItem) => void;
+    handleError: (errorCode: string, errorMessageShort: string, errorMessageFull: string) => void;
+}
+
+export interface ISearchBarProps {
+filterPL: (substring: string) => void;
+}
+
+export interface navigationProps {
+    onGeneratorClick: () => void,
+    onBankClick: () => void,
+    onNewPasswordClick: () => void
+}
+
 export interface passwordCreatorProps {
     updatePasswordList: ({ username, email, password, url}: PasswordListItem) => void,
     handleClose: () => void,
     handleError: (errorCode: string, errorMessageShort:string, errorMessageFull:string) => void,
-  }
+}
 
 export interface passDetailProps {
     passList: Array<PasswordListItem>,

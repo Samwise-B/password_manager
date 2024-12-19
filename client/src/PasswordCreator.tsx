@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { useForm, FormProvider } from "react-hook-form"
 import { useAuth } from "./AuthProvider";
 import { useAddPassword } from "./utils/addPassword";
@@ -5,6 +6,7 @@ import Offcanvas from 'react-bootstrap/Offcanvas';
 import Generator from "./Generator";
 import { Input } from "./PassDetails";
 import { passwordCreatorProps } from "./types";
+import { EndpointContext } from "./EndpointContext";
 
 export function PasswordCreator({ updatePasswordList, handleClose, handleError }: passwordCreatorProps) {
     return (
@@ -24,6 +26,7 @@ export function NewPasswordForm({ updatePasswordList, handleClose, handleError }
         criteriaMode: "all"
     });
     const { masterKey } = useAuth();
+    const endpoints = useContext(EndpointContext);
 
     const onSubmit = methods.handleSubmit(async data => {
         console.log(data);
@@ -32,7 +35,7 @@ export function NewPasswordForm({ updatePasswordList, handleClose, handleError }
         const password = data.password;
         const url = data.url;
         const label = data.label;
-        const newPassword = await useAddPassword({ username, email, password, url, label, masterKey, handleError })
+        const newPassword = await useAddPassword({ username, email, password, url, label, masterKey, endpoints, handleError })
         if (newPassword) {
             updatePasswordList(newPassword);
             handleClose();
@@ -43,7 +46,6 @@ export function NewPasswordForm({ updatePasswordList, handleClose, handleError }
     })
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        console.log(e.target.id, e.target.value);
         methods.setValue(e.target.id, e.target.value)
     }
 
