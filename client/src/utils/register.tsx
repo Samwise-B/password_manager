@@ -1,10 +1,8 @@
 import { arrayBufferToBase64, deriveKeyLogin, hashDerivedKeyToBase64 } from "./encryption";
-import { useContext } from "react";
-import { EndpointContext } from "../EndpointContext";
+import { IEndpointContext } from "../EndpointContext";
 
 
-export async function registerUser(username: string, masterPassword: string) {
-    const endpoints = useContext(EndpointContext);
+export async function registerUser(username: string, masterPassword: string, endpoints: IEndpointContext) {
     const salt = arrayBufferToBase64(window.crypto.getRandomValues(new Uint8Array(16)));
     const derivedKey = await deriveKeyLogin(masterPassword, salt);
     const hashedKey = await hashDerivedKeyToBase64(derivedKey);

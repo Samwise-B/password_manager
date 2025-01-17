@@ -12,7 +12,10 @@ import fs from "fs";
 import { get } from "http";
 
 // add .env configuration
-dotenv.config();
+//dotenv.config();
+const envFile = (process.env.NODE_ENV == "test") ? path.join(__dirname, `../.env.test`) : path.join(__dirname, `../.env.development`);
+console.log("test", envFile);
+dotenv.config({ path: envFile });
 
 //const KnexSessionStore = require("connect-session-knex")(session);
 
@@ -23,7 +26,7 @@ dotenv.config();
 
 const env_mode = getEnvVariable("NODE_ENV");
 let origin;
-if (env_mode === "development") {
+if (env_mode === "development" || env_mode === "test") {
   origin = ["http://localhost:3000"];
 } else {
   origin = ["https://oceans-end.com", "https://oceans-end.com"]
@@ -281,3 +284,5 @@ app.listen(port, () => {
 // https.createServer(sslOptions, app).listen(3001, "0.0.0.0", () => {
 //   console.log(`Server running on https://localhost, port ${3001}`);
 // });
+
+export default app;
